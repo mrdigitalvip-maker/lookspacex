@@ -1,0 +1,32 @@
+:root {
+  /* Paleta de cores espacial */
+  --color-space-50: #f8f9fc;
+  --color-space-100: #f1f3f9;
+  --color-space-200: #e3e7f1;
+  --color-space-300: #c5cde3;
+  --color-space-400: #a7b5d5;
+  --color-space-500: #7e8cc7;
+  --color-space-600: #5e73b1;
+  --color-space-700: #4a5a8f;
+  --color-space-800: #364270;
+  --color-space-900: #222a4d;
+
+  /* Cores nebulosa */
+  --color-nebula-purple: #9d4edd;
+  --color-nebula-cyan: #00d9ff;
+  --color-nebula-pink: #ff006e;
+
+  /* Famílias de fontes */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+  --font-display: Georgia, serif;
+
+  /* Espaçamento */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3rem;
+}

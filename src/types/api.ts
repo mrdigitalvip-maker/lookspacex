@@ -1,0 +1,22 @@
+export interface ApiErrorResponse {
+  status: number
+  code: string
+  message: string
+}
+
+export class ApiError extends Error {
+  status: number
+  code: string
+
+  constructor(status: number, code: string, message: string) {
+    super(message)
+    this.status = status
+    this.code = code
+    this.name = 'ApiError'
+  }
+}
+
+export interface ApiSuccessResponse<T> {
+  data: T
+  status: number
+}
