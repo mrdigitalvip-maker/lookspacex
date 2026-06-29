@@ -39,7 +39,6 @@ body {
   font-family: 'Share Tech Mono', monospace;
 }
 
-/* Scanlines */
 body::after {
   content: '';
   position: fixed;
@@ -55,7 +54,6 @@ body::after {
   z-index: 999;
 }
 
-/* Vignette */
 body::before {
   content: '';
   position: fixed;
@@ -65,7 +63,6 @@ body::before {
   z-index: 998;
 }
 
-/* Corner brackets */
 .corner {
   position: fixed;
   width: 30px;
@@ -77,7 +74,6 @@ body::before {
 .corner-bl { bottom: 20px; left: 20px; border-bottom: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan); }
 .corner-br { bottom: 20px; right: 20px; border-bottom: 2px solid var(--neon-cyan); border-right: 2px solid var(--neon-cyan); }
 
-/* Glitch animation */
 @keyframes glitch {
   0%   { transform: translate(0); }
   20%  { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
@@ -91,7 +87,6 @@ body::before {
   animation: glitch 200ms ease-in-out;
 }
 
-/* Glow pulse */
 @keyframes glowPulse {
   from { filter: drop-shadow(0 0 6px #00f5ff); }
   to   { filter: drop-shadow(0 0 20px #00f5ff) drop-shadow(0 0 40px #00f5ff); }
@@ -101,7 +96,6 @@ body::before {
   animation: glowPulse 3s ease-in-out infinite alternate;
 }
 
-/* Blink */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.2; }
@@ -111,16 +105,44 @@ body::before {
   animation: blink 2s ease-in-out infinite;
 }
 
-/* Orbit rotate */
 @keyframes orbitRotate {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* Fade in up */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.corner { animation: cornerPulse 3s ease-in-out infinite; }
+
+@keyframes cornerPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(0.95); opacity: 0.6; }
+}
+
+@keyframes bootFlash {
+  0%   { opacity: 1; }
+  50%  { opacity: 0; background: rgba(0, 245, 255, 0.15); }
+  100% { opacity: 1; }
+}
+
+.boot-flash {
+  animation: bootFlash 300ms ease-in-out;
+}
+
+@keyframes introFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.intro-fade {
+  animation: introFade 1s ease-out forwards;
 }
 
 .fade-in-up {
