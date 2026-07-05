@@ -16,7 +16,11 @@ const menuItems = [
 ]
 
 export default function HomePage() {
+<<<<<<< HEAD
   const [phase, setPhase] = useState<'intro' | 'menu'>('intro')
+=======
+  const [phase, setPhase] = useState<'intro' | 'menu' | 'login'>('intro')
+>>>>>>> 7484e85 (fix: corrigir todos os erros de build e lint para deploy na Vercel)
   const [showLogin, setShowLogin] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

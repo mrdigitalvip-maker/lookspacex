@@ -1,10 +1,6 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  // Middleware stub para refresh de sessão do Supabase
-  // Será implementado quando a autenticação for configurada
-
+export async function middleware() {
   return NextResponse.next()
 }
 
