@@ -28,7 +28,7 @@ type Planet = {
   color: string
 }
 
-export function StarfieldCanvas() {
+export default function StarfieldCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -46,23 +46,28 @@ export function StarfieldCanvas() {
     let pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
 
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth * window.devicePixelRatio
-      canvas.height = window.innerHeight * window.devicePixelRatio
-      context.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0)
+      const ratio = window.devicePixelRatio || 1
+      canvas.width = window.innerWidth * ratio
+      canvas.height = window.innerHeight * ratio
+      context.setTransform(ratio, 0, 0, ratio, 0, 0)
+    }
+
+    const handlePointerMove = (event: MouseEvent) => {
+      pointer = { x: event.clientX, y: event.clientY }
     }
 
     resizeCanvas()
 
-    const stars: Star[] = Array.from({ length: 260 }, () => ({
+    const stars: Star[] = Array.from({ length: 400 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      radius: Math.random() * 1.6 + 0.3,
+      radius: Math.random() * 2.2 + 0.5,
       opacity: Math.random() * 0.7 + 0.2,
       twinkle: Math.random() * Math.PI * 2,
       drift: Math.random() * 0.01 + 0.002,
     }))
 
-    const particles: Particle[] = Array.from({ length: 54 }, () => ({
+    const particles: Particle[] = Array.from({ length: 30 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       radius: Math.random() * 1.3 + 0.4,
@@ -72,9 +77,8 @@ export function StarfieldCanvas() {
     }))
 
     const planets: Planet[] = [
-      { x: window.innerWidth * 0.2, y: window.innerHeight * 0.78, radius: 120, opacity: 0.16, color: '#4f46e5' },
-      { x: window.innerWidth * 0.8, y: window.innerHeight * 0.2, radius: 80, opacity: 0.13, color: '#06b6d4' },
-      { x: window.innerWidth * 0.65, y: window.innerHeight * 0.72, radius: 65, opacity: 0.12, color: '#a855f7' },
+      { x: window.innerWidth * 0.2, y: window.innerHeight * 0.78, radius: 140, opacity: 0.18, color: '#4f46e5' },
+      { x: window.innerWidth * 0.8, y: window.innerHeight * 0.2, radius: 95, opacity: 0.14, color: '#06b6d4' },
     ]
 
     const nebulae = [
@@ -93,14 +97,7 @@ export function StarfieldCanvas() {
       context.fillRect(0, 0, window.innerWidth, window.innerHeight)
 
       nebulae.forEach((nebula, index) => {
-        const glow = context.createRadialGradient(
-          nebula.x,
-          nebula.y,
-          0,
-          nebula.x,
-          nebula.y,
-          nebula.radius
-        )
+        const glow = context.createRadialGradient(nebula.x, nebula.y, 0, nebula.x, nebula.y, nebula.radius)
         glow.addColorStop(0, nebula.color)
         glow.addColorStop(1, 'rgba(0,0,0,0)')
         context.globalAlpha = 0.96
@@ -110,14 +107,14 @@ export function StarfieldCanvas() {
         context.fill()
       })
 
-      planets.forEach((planet) => {
+      planets.forEach((planet, index) => {
         const glow = context.createRadialGradient(planet.x, planet.y, 0, planet.x, planet.y, planet.radius)
         glow.addColorStop(0, planet.color)
         glow.addColorStop(1, 'rgba(0,0,0,0)')
         context.globalAlpha = planet.opacity
         context.fillStyle = glow
         context.beginPath()
-        context.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2)
+        context.arc(planet.x, planet.y, planet.radius + index * 8, 0, Math.PI * 2)
         context.fill()
       })
 
@@ -160,15 +157,13 @@ export function StarfieldCanvas() {
       animationId = window.requestAnimationFrame(drawScene)
     }
 
-    window.addEventListener('mousemove', (event) => {
-      pointer = { x: event.clientX, y: event.clientY }
-    })
+    window.addEventListener('mousemove', handlePointerMove)
     window.addEventListener('resize', resizeCanvas)
     animationId = window.requestAnimationFrame(drawScene)
 
     return () => {
       window.cancelAnimationFrame(animationId)
-      window.removeEventListener('mousemove', () => undefined)
+      window.removeEventListener('mousemove', handlePointerMove)
       window.removeEventListener('resize', resizeCanvas)
     }
   }, [])

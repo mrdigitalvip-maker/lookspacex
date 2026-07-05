@@ -1,5 +1,6 @@
+export { default as LoginModal } from './LoginModal'
+export { default as StarfieldCanvas } from './StarfieldCanvas'
 export { Button } from './Button'
 export { Input } from './Input'
-export { StarfieldCanvas } from './StarfieldCanvas'
 export type { ButtonProps } from './Button'
 export type { InputProps } from './Input'

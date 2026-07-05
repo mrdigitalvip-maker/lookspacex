@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { StarfieldCanvas } from '@/components/ui/StarfieldCanvas'
+import StarfieldCanvas from '@/components/ui/StarfieldCanvas'
 
 type SpacePageProps = {
   title: string
