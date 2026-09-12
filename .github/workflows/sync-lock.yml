@@ -1,0 +1,51 @@
+name: Sync dependency lock
+
+on:
+  push:
+    branches:
+      - codex/lookspace-v0.6-flight-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/lookspace-v0.6-flight-foundation
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Regenerate lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Commit synchronized lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json already synchronized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: sync package lock"
+          git push origin HEAD:codex/lookspace-v0.6-flight-foundation
+
+      - name: Clean install
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Production build
+        run: npm run build
