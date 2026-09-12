@@ -7,6 +7,7 @@ import { AsteroidField } from '@/game/world/AsteroidField'
 import { MissionBeacon } from '@/game/world/MissionBeacon'
 import { SolarSystem } from '@/game/world/SolarSystem'
 import { StarBaseHangar } from '@/game/world/StarBaseHangar'
+import { StarBaseTraffic } from '@/game/world/StarBaseTraffic'
 import { StarField } from '@/game/world/StarField'
 import { WarpTunnel } from '@/game/world/WarpTunnel'
 
@@ -32,6 +33,7 @@ export function SpaceScene() {
       <StarField />
       <SolarSystem />
       <StarBaseHangar />
+      <StarBaseTraffic />
       <AsteroidField />
       <MissionBeacon />
       <CollisionSystem />
