@@ -80,7 +80,7 @@ function App() {
       setScene('SPACE')
       setCinematicMode(null)
       launchTimerRef.current = null
-    }, 4800)
+    }, 6500)
   }
 
   const handleInstall = async () => {
@@ -111,7 +111,7 @@ function App() {
 
       {scene === 'SPACE' && cinematicMode !== 'mission-complete' ? <SpaceHUD /> : null}
 
-      <div className="build-chip">COCKPIT ERA // {GAME_CONFIG.version}</div>
+      <div className="build-chip">STARBASE // LIVING SHIP // {GAME_CONFIG.version}</div>
 
       {scene === 'SPLASH' ? (
         <motion.section
@@ -137,7 +137,7 @@ function App() {
                 transition={{ duration: 1.8, ease: 'easeInOut' }}
               />
             </div>
-            <p className="splash-status">Waking Aurora cockpit systems</p>
+            <p className="splash-status">Synchronizing Helios StarBase and Aurora interior</p>
           </motion.div>
         </motion.section>
       ) : null}
@@ -155,13 +155,13 @@ function App() {
               <span />
               <span />
             </div>
-            <p className="eyebrow">PILOT ACCESS // HELIOS NETWORK</p>
-            <h2>Enter the living universe.</h2>
+            <p className="eyebrow">PILOT ACCESS // HELIOS STARBASE</p>
+            <h2>Board the Aurora.</h2>
             <p className="entry-copy">
-              Launch the Aurora Scout from a cinematic exterior sequence and take control from inside the cockpit. Switch views at any time while the campaign expands around you.
+              Begin inside Helios StarBase, watch the hangar release your ship, launch through the departure corridor and take control from the Aurora cockpit. Cycle through cockpit, living cabin and chase views while the campaign expands.
             </p>
             <button className="primary-action" type="button" onClick={beginGuestSession}>
-              <span>Begin cockpit launch</span>
+              <span>Board Aurora & launch</span>
               <strong>→</strong>
             </button>
 
@@ -182,7 +182,7 @@ function App() {
               <span>A/D yaw</span>
               <span>Arrows pitch</span>
               <span>Q/E roll</span>
-              <span>C camera</span>
+              <span>C cockpit/cabin/chase</span>
               <span>T target</span>
               <span>R warp</span>
               <span>Shift boost</span>
@@ -193,7 +193,7 @@ function App() {
 
       {scene === 'LOADING' && isLoading ? (
         <div className="launch-status" aria-hidden="true">
-          <span>EXTERIOR CAMERA → COCKPIT HANDOFF</span>
+          <span>STARBASE RELEASE → DEPARTURE CORRIDOR → COCKPIT</span>
           <i />
         </div>
       ) : null}

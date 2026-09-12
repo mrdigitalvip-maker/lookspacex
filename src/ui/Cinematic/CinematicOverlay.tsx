@@ -36,16 +36,40 @@ export function CinematicOverlay({ mode, missionId, missionTitle }: CinematicOve
           />
 
           {mode === 'launch' ? (
-            <motion.div
-              className="cinematic-copy cinematic-launch-copy"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: [0, 1, 1, 0], y: [16, 0, 0, -8] }}
-              transition={{ duration: 4.6, times: [0, 0.16, 0.78, 1] }}
-            >
-              <span>HELIOS OUTPOST // DEPARTURE VECTOR 07</span>
-              <strong>AURORA SCOUT</strong>
-              <p>Pilot link established. Releasing flight authority.</p>
-            </motion.div>
+            <>
+              <motion.div
+                className="cinematic-copy cinematic-launch-copy cinematic-stage"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: [0, 1, 1, 0], y: [16, 0, 0, -8] }}
+                transition={{ duration: 1.9, times: [0, 0.18, 0.72, 1] }}
+              >
+                <span>HELIOS STARBASE // HANGAR 07</span>
+                <strong>BOARDING COMPLETE</strong>
+                <p>Cabin seal verified. Pilot neural link and life-support bus online.</p>
+              </motion.div>
+
+              <motion.div
+                className="cinematic-copy cinematic-launch-copy cinematic-stage"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: [0, 1, 1, 0], y: [16, 0, 0, -8] }}
+                transition={{ duration: 2.1, delay: 1.65, times: [0, 0.2, 0.72, 1] }}
+              >
+                <span>DEPARTURE CONTROL // PRESSURE RELEASE</span>
+                <strong>HANGAR OPEN</strong>
+                <p>Docking arms clear. Main doors moving. Aurora engines entering flight power.</p>
+              </motion.div>
+
+              <motion.div
+                className="cinematic-copy cinematic-launch-copy cinematic-stage"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: [0, 1, 1, 0], y: [16, 0, 0, -8] }}
+                transition={{ duration: 2.65, delay: 3.45, times: [0, 0.16, 0.78, 1] }}
+              >
+                <span>HELIOS OUTPOST // DEPARTURE VECTOR 07</span>
+                <strong>AURORA SCOUT</strong>
+                <p>Leaving StarBase. Exterior camera transferring flight authority to cockpit.</p>
+              </motion.div>
+            </>
           ) : (
             <motion.div
               className="cinematic-copy cinematic-mission-copy"

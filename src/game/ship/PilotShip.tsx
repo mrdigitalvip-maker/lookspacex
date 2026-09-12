@@ -17,9 +17,11 @@ const TARGET_LOCK_RANGE = 900
 const TARGET_LOCK_DOT = 0.62
 const WARP_DURATION = 3.25
 const WARP_SPEED = 340
+const STARBASE_LAUNCH_DURATION = 6.2
 
 export function PilotShip() {
   const shipRef = useRef<THREE.Group>(null)
+  const exteriorRef = useRef<THREE.Group>(null)
   const leftThrusterRef = useRef<THREE.MeshStandardMaterial>(null)
   const rightThrusterRef = useRef<THREE.MeshStandardMaterial>(null)
   const leftPlumeRef = useRef<THREE.Mesh>(null)
@@ -45,12 +47,13 @@ export function PilotShip() {
   const warpDirection = useMemo(() => new THREE.Vector3(0, 0, -1), [])
   const warpVelocity = useMemo(() => new THREE.Vector3(), [])
   const cockpitWorld = useMemo(() => new THREE.Vector3(), [])
-  const cockpitLook = useMemo(() => new THREE.Vector3(), [])
+  const cabinWorld = useMemo(() => new THREE.Vector3(), [])
   const cameraOffset = useMemo(
     () => new THREE.Vector3(0, GAME_CONFIG.camera.thirdPersonHeight, GAME_CONFIG.camera.thirdPersonDistance),
     [],
   )
   const cockpitOffset = useMemo(() => new THREE.Vector3(0, 0.72, -0.16), [])
+  const cabinOffset = useMemo(() => new THREE.Vector3(0, 0.48, 2.2), [])
 
   useEffect(() => {
     const setKey = (event: KeyboardEvent, pressed: boolean) => {
@@ -119,8 +122,9 @@ export function PilotShip() {
     const toggleCamera = () => {
       if (useGameStore.getState().isPaused) return
       const shipState = useShipStore.getState()
+      const current = shipState.viewMode
       shipState.toggleViewMode()
-      const next = shipState.viewMode === 'cockpit' ? 'CHASE CAMERA' : 'COCKPIT'
+      const next = current === 'cockpit' ? 'CABIN INTERIOR' : current === 'cabin' ? 'CHASE CAMERA' : 'COCKPIT'
       useUIStore.getState().addNotification(`VIEW MODE // ${next}`, 'info')
     }
 
@@ -158,40 +162,70 @@ export function PilotShip() {
 
     forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
     cockpitWorld.copy(cockpitOffset).applyQuaternion(ship.quaternion).add(ship.position)
-    cockpitLook.copy(ship.position).addScaledVector(forward, 28).add(new THREE.Vector3(0, 0.65, 0))
+    cabinWorld.copy(cabinOffset).applyQuaternion(ship.quaternion).add(ship.position)
 
     if (gameState.currentScene === 'LOADING') {
       if (launchStartRef.current === null) launchStartRef.current = state.clock.elapsedTime
       const elapsed = state.clock.elapsedTime - launchStartRef.current
-      const t = THREE.MathUtils.clamp(elapsed / 4.5, 0, 1)
-      const eased = 1 - Math.pow(1 - t, 3)
-      const angle = THREE.MathUtils.lerp(-1.18, 0.08, eased)
-      const radius = THREE.MathUtils.lerp(25, GAME_CONFIG.camera.thirdPersonDistance + 1.5, eased)
-      const height = THREE.MathUtils.lerp(9, GAME_CONFIG.camera.thirdPersonHeight, eased)
+      const t = THREE.MathUtils.clamp(elapsed / STARBASE_LAUNCH_DURATION, 0, 1)
+      const departure = THREE.MathUtils.smoothstep(t, 0.18, 0.84)
+      const lift = THREE.MathUtils.smoothstep(t, 0.2, 0.52)
 
+      ship.position.set(0, THREE.MathUtils.lerp(-0.2, 0.75, lift), THREE.MathUtils.lerp(42, -31, departure))
+      ship.rotation.x = 0
+      ship.rotation.z = 0
+      ship.rotation.y = Math.sin(elapsed * 0.42) * 0.025 * (1 - departure)
+
+      forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
+      cockpitWorld.copy(cockpitOffset).applyQuaternion(ship.quaternion).add(ship.position)
+
+      const externalPhase = THREE.MathUtils.clamp(t / 0.68, 0, 1)
+      const angle = THREE.MathUtils.lerp(-1.15, -0.02, externalPhase)
+      const radius = THREE.MathUtils.lerp(20, 12.8, externalPhase)
+      const height = THREE.MathUtils.lerp(7.8, 4.6, externalPhase)
       desiredCameraPosition.set(Math.sin(angle) * radius, height, Math.cos(angle) * radius).add(ship.position)
+
       if (t > 0.68) {
-        const cockpitBlend = THREE.MathUtils.smoothstep(t, 0.68, 1)
+        const cockpitBlend = THREE.MathUtils.smoothstep(t, 0.68, 0.98)
         desiredCameraPosition.lerp(cockpitWorld, cockpitBlend)
       }
-      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-4.2 * delta))
-      desiredLookAt.copy(ship.position).addScaledVector(forward, t > 0.68 ? 28 : 0.5).add(new THREE.Vector3(0, 0.25, 0))
+
+      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-4.8 * delta))
+      desiredLookAt.copy(ship.position).addScaledVector(forward, t > 0.68 ? 34 : 1.5).add(new THREE.Vector3(0, 0.35, 0))
       camera.lookAt(desiredLookAt)
-      ship.rotation.y = Math.sin(elapsed * 0.38) * 0.06 * (1 - t)
+
+      if (exteriorRef.current) exteriorRef.current.visible = t < 0.79
 
       if (camera instanceof THREE.PerspectiveCamera) {
-        const launchFov = t > 0.68 ? THREE.MathUtils.lerp(64, 70, (t - 0.68) / 0.32) : THREE.MathUtils.lerp(58, 68, eased)
-        camera.fov = THREE.MathUtils.lerp(camera.fov, launchFov, 1 - Math.exp(-4 * delta))
+        const launchFov = t > 0.68 ? THREE.MathUtils.lerp(64, 70, (t - 0.68) / 0.32) : THREE.MathUtils.lerp(56, 68, externalPhase)
+        camera.fov = THREE.MathUtils.lerp(camera.fov, launchFov, 1 - Math.exp(-4.4 * delta))
         camera.updateProjectionMatrix()
       }
 
-      const launchPulse = 2.2 + Math.sin(elapsed * 7) * 0.35
+      const engineRise = THREE.MathUtils.smoothstep(t, 0.18, 0.5)
+      const launchPulse = 1.5 + engineRise * 7 + Math.sin(elapsed * 9) * 0.35
       if (leftThrusterRef.current) leftThrusterRef.current.emissiveIntensity = launchPulse
       if (rightThrusterRef.current) rightThrusterRef.current.emissiveIntensity = launchPulse
+
+      for (const plume of [leftPlumeRef.current, rightPlumeRef.current]) {
+        if (!plume) continue
+        plume.visible = t > 0.22 && t < 0.79
+        plume.scale.set(1 + engineRise * 0.35, 0.8 + engineRise * 2.5, 1 + engineRise * 0.35)
+      }
+
+      telemetryRef.current += delta
+      if (telemetryRef.current >= TELEMETRY_INTERVAL) {
+        telemetryRef.current = 0
+        const simulatedSpeed = departure * 48
+        setPosition([ship.position.x, ship.position.y, ship.position.z])
+        setVelocity(simulatedSpeed)
+        flightAudio.update(Math.min(1, simulatedSpeed / GAME_CONFIG.physics.turboSpeed), false)
+      }
       return
     }
 
     launchStartRef.current = null
+    if (exteriorRef.current) exteriorRef.current.visible = shipState.viewMode === 'chase'
 
     if (gameState.isPaused) {
       const angle = state.clock.elapsedTime * 0.22
@@ -258,22 +292,27 @@ export function PilotShip() {
     ship.position.addScaledVector(velocity, delta)
 
     const cockpit = shipState.viewMode === 'cockpit'
+    const cabin = shipState.viewMode === 'cabin'
     if (cockpit) {
       desiredCameraPosition.copy(cockpitOffset).applyQuaternion(ship.quaternion).add(ship.position)
       desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 90 : 34).add(new THREE.Vector3(0, 0.55, 0))
+    } else if (cabin) {
+      desiredCameraPosition.copy(cabinOffset).applyQuaternion(ship.quaternion).add(ship.position)
+      desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 52 : 10).add(new THREE.Vector3(0, 0.38, 0))
     } else {
       desiredCameraPosition.copy(cameraOffset).applyQuaternion(ship.quaternion).add(ship.position)
       desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 70 : 22)
     }
 
-    const cameraBlend = 1 - Math.exp(-(cockpit ? 9.5 : warping ? 3.2 : CAMERA_DAMPING) * delta)
+    const interiorView = cockpit || cabin
+    const cameraBlend = 1 - Math.exp(-(interiorView ? 9.5 : warping ? 3.2 : CAMERA_DAMPING) * delta)
     camera.position.lerp(desiredCameraPosition, cameraBlend)
     camera.lookAt(desiredLookAt)
 
     if (camera instanceof THREE.PerspectiveCamera) {
       const speedRatio = Math.min(1, velocity.length() / WARP_SPEED)
-      const baseFov = cockpit ? 70 : GAME_CONFIG.camera.fov
-      const targetFov = warping ? (cockpit ? 96 : 108) : baseFov + speedRatio * 6 + (boosting ? 4 : 0)
+      const baseFov = cockpit ? 70 : cabin ? 66 : GAME_CONFIG.camera.fov
+      const targetFov = warping ? (interiorView ? 96 : 108) : baseFov + speedRatio * 6 + (boosting ? 4 : 0)
       camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-(warping ? 7 : 5.5) * delta))
       camera.updateProjectionMatrix()
     }
@@ -288,7 +327,7 @@ export function PilotShip() {
     const plumeLength = 0.6 + enginePower * 1.8 + (warping ? 4.8 : boosting ? 1.2 : 0)
     for (const plume of [leftPlumeRef.current, rightPlumeRef.current]) {
       if (!plume) continue
-      plume.visible = accelerating || velocity.length() > 6 || warping
+      plume.visible = shipState.viewMode === 'chase' && (accelerating || velocity.length() > 6 || warping)
       plume.scale.set(1 + speedRatio * 0.35, plumeLength, 1 + speedRatio * 0.35)
     }
 
@@ -306,10 +345,10 @@ export function PilotShip() {
   })
 
   return (
-    <group ref={shipRef} position={[0, 0, 25]} rotation={[0, 0, 0]}>
+    <group ref={shipRef} position={[0, -0.2, 42]} rotation={[0, 0, 0]}>
       <CockpitInterior />
 
-      <group visible={viewMode === 'chase'}>
+      <group ref={exteriorRef} visible={viewMode === 'chase'}>
         <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
           <coneGeometry args={[1.25, 5.2, 6]} />
           <meshStandardMaterial color="#182238" metalness={0.88} roughness={0.22} />

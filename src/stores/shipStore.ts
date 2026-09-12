@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Ship } from '@/types/ship'
 
-export type ShipViewMode = 'cockpit' | 'chase'
+export type ShipViewMode = 'cockpit' | 'cabin' | 'chase'
 
 interface ShipStore {
   currentShip: Ship | null
@@ -42,7 +42,7 @@ const initialShip = {
 
 export const useShipStore = create<ShipStore>((set) => ({
   currentShip: initialShip,
-  position: [0, 0, 25],
+  position: [0, 0, 42],
   velocity: 0,
   fuel: 100,
   shield: 100,
@@ -57,6 +57,9 @@ export const useShipStore = create<ShipStore>((set) => ({
   regenShield: () => set((state) => ({ shield: Math.min(100, state.shield + 1) })),
   setWarping: (isWarping) => set({ isWarping }),
   setViewMode: (viewMode) => set({ viewMode }),
-  toggleViewMode: () => set((state) => ({ viewMode: state.viewMode === 'cockpit' ? 'chase' : 'cockpit' })),
+  toggleViewMode: () =>
+    set((state) => ({
+      viewMode: state.viewMode === 'cockpit' ? 'cabin' : state.viewMode === 'cabin' ? 'chase' : 'cockpit',
+    })),
   setCurrentShip: (currentShip) => set({ currentShip }),
 }))

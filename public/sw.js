@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lookspace-v1-shell'
+const CACHE_NAME = 'lookspace-v1.1-shell'
 const CORE_ASSETS = ['/', '/index.html', '/manifest.webmanifest', '/icons/lookspace-192.png', '/icons/lookspace-512.png']
 
 self.addEventListener('install', (event) => {
