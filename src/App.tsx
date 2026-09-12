@@ -5,6 +5,7 @@ import { flightAudio } from '@/game/audio/FlightAudio'
 import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useGameStore } from '@/stores/gameStore'
 import { useMissionStore } from '@/stores/missionStore'
+import { useShipStore } from '@/stores/shipStore'
 import { CinematicOverlay, type CinematicMode } from '@/ui/Cinematic/CinematicOverlay'
 import { SpaceHUD } from '@/ui/HUD/SpaceHUD'
 
@@ -23,6 +24,7 @@ function App() {
   const missionTitle = useMissionStore((state) => state.title)
   const missionStatus = useMissionStore((state) => state.status)
   const advanceMission = useMissionStore((state) => state.advanceMission)
+  const setViewMode = useShipStore((state) => state.setViewMode)
   const { canInstall, installed, isIOS, install } = useInstallPrompt()
   const [cinematicMode, setCinematicMode] = useState<CinematicMode>(null)
   const [installHint, setInstallHint] = useState<string | null>(null)
@@ -67,11 +69,13 @@ function App() {
     if (launchTimerRef.current !== null) window.clearTimeout(launchTimerRef.current)
 
     flightAudio.start()
+    setViewMode('chase')
     setCinematicMode('launch')
     setScene('LOADING')
     setLoading(true)
 
     launchTimerRef.current = window.setTimeout(() => {
+      setViewMode('cockpit')
       setLoading(false)
       setScene('SPACE')
       setCinematicMode(null)
