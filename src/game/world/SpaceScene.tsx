@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
+import * as THREE from 'three'
 import { PilotShip } from '@/game/ship/PilotShip'
 import { SolarSystem } from '@/game/world/SolarSystem'
 import { StarField } from '@/game/world/StarField'
@@ -16,6 +16,10 @@ export function SpaceScene() {
         far: GAME_CONFIG.camera.far,
       }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = THREE.ACESFilmicToneMapping
+        gl.toneMappingExposure = 1.15
+      }}
     >
       <color attach="background" args={['#01030a']} />
       <fog attach="fog" args={['#02050d', 220, 2200]} />
@@ -23,10 +27,6 @@ export function SpaceScene() {
       <StarField />
       <SolarSystem />
       <PilotShip />
-      <EffectComposer multisampling={0}>
-        <Bloom intensity={1.15} luminanceThreshold={0.72} luminanceSmoothing={0.25} mipmapBlur />
-        <Vignette eskil={false} offset={0.14} darkness={0.82} />
-      </EffectComposer>
     </Canvas>
   )
 }
