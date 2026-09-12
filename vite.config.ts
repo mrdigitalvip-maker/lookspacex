@@ -11,7 +11,6 @@ export default defineConfig({
       '@game': path.resolve(__dirname, './src/game'),
       '@ui': path.resolve(__dirname, './src/ui'),
       '@assets': path.resolve(__dirname, './src/assets'),
-      '@supabase': path.resolve(__dirname, './src/supabase'),
     },
   },
   build: {
