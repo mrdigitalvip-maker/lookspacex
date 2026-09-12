@@ -34,9 +34,12 @@ export function SpaceHUD() {
   const targetName = useMissionStore((state) => state.targetName)
   const distance = useMissionStore((state) => state.distance)
   const missionStatus = useMissionStore((state) => state.status)
+  const targetLocked = useMissionStore((state) => state.targetLocked)
+
+  const shieldStatus = shield <= 20 ? 'CRITICAL' : shield <= 50 ? 'DAMAGED' : 'NOMINAL'
 
   return (
-    <div className="space-hud">
+    <div className={`space-hud ${shield <= 20 ? 'shield-critical' : ''}`}>
       <div className="hud-top-left hud-panel">
         <p className="hud-kicker">AURORA FLIGHT COMPUTER</p>
         <div className="pilot-line">
@@ -58,7 +61,7 @@ export function SpaceHUD() {
       <div className="hud-top-right hud-panel">
         <p className="hud-kicker">SHIP STATUS</p>
         <strong className="ship-name">{ship?.name ?? 'Aurora Scout'}</strong>
-        <span className="ship-class">EXPLORER CLASS // LINK STABLE</span>
+        <span className="ship-class">SHIELD {shieldStatus} // EXPLORER CLASS</span>
       </div>
 
       <div className={`mission-panel ${missionStatus === 'completed' ? 'mission-complete' : ''}`}>
@@ -74,16 +77,16 @@ export function SpaceHUD() {
         </div>
       </div>
 
-      <div className="flight-reticle" aria-hidden="true">
+      <div className={`flight-reticle ${targetLocked ? 'reticle-locked' : ''}`} aria-hidden="true">
         <span className="reticle-horizontal" />
         <span className="reticle-vertical" />
         <i />
       </div>
 
       {missionStatus === 'active' && (
-        <div className="target-lock" aria-hidden="true">
-          <span>{targetName}</span>
-          <strong>{distance.toFixed(0)} u</strong>
+        <div className={`target-lock ${targetLocked ? 'target-lock-active' : ''}`} aria-hidden="true">
+          <span>{targetLocked ? `LOCK // ${targetName}` : `TRACK // ${targetName}`}</span>
+          <strong>{targetLocked ? `${distance.toFixed(0)} u · LOCKED` : `${distance.toFixed(0)} u · PRESS T`}</strong>
         </div>
       )}
 
@@ -113,6 +116,7 @@ export function SpaceHUD() {
           <span><kbd>A</kbd><kbd>D</kbd> YAW</span>
           <span><kbd>↑</kbd><kbd>↓</kbd> PITCH</span>
           <span><kbd>Q</kbd><kbd>E</kbd> ROLL</span>
+          <span><kbd>T</kbd> TARGET</span>
           <span><kbd>SHIFT</kbd> BOOST</span>
         </div>
       </div>
