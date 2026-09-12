@@ -7,7 +7,6 @@ import { useShipStore } from '@/stores/shipStore'
 type KeyState = Record<string, boolean>
 
 const CAMERA_DAMPING = 5.5
-const SPEED_DAMPING = 3.8
 const TELEMETRY_INTERVAL = 0.08
 
 export function PilotShip() {
@@ -78,7 +77,13 @@ export function PilotShip() {
       targetSpeed = 0
     }
 
-    speedRef.current = THREE.MathUtils.damp(speedRef.current, targetSpeed, SPEED_DAMPING, delta)
+    const speedResponse = accelerating ? acceleration : GAME_CONFIG.physics.deceleration
+    const maxSpeedChange = speedResponse * delta
+    speedRef.current = THREE.MathUtils.clamp(
+      targetSpeed,
+      speedRef.current - maxSpeedChange,
+      speedRef.current + maxSpeedChange,
+    )
 
     const yawInput = Number(Boolean(keys.KeyA || keys.ArrowLeft)) - Number(Boolean(keys.KeyD || keys.ArrowRight))
     const pitchInput = Number(Boolean(keys.ArrowDown)) - Number(Boolean(keys.ArrowUp))
