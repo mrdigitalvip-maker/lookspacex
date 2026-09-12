@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { Ship } from '@/types/ship'
 
+export type ShipViewMode = 'cockpit' | 'chase'
+
 interface ShipStore {
   currentShip: Ship | null
   position: [number, number, number]
@@ -9,6 +11,7 @@ interface ShipStore {
   shield: number
   energy: number
   isWarping: boolean
+  viewMode: ShipViewMode
   setPosition: (position: [number, number, number]) => void
   setVelocity: (velocity: number) => void
   consumeFuel: (amount: number) => void
@@ -16,6 +19,8 @@ interface ShipStore {
   damageShield: (amount: number) => void
   regenShield: () => void
   setWarping: (isWarping: boolean) => void
+  setViewMode: (viewMode: ShipViewMode) => void
+  toggleViewMode: () => void
   setCurrentShip: (ship: Ship) => void
 }
 
@@ -43,6 +48,7 @@ export const useShipStore = create<ShipStore>((set) => ({
   shield: 100,
   energy: 100,
   isWarping: false,
+  viewMode: 'cockpit',
   setPosition: (position) => set({ position }),
   setVelocity: (velocity) => set({ velocity }),
   consumeFuel: (amount) => set((state) => ({ fuel: Math.max(0, state.fuel - amount) })),
@@ -50,5 +56,7 @@ export const useShipStore = create<ShipStore>((set) => ({
   damageShield: (amount) => set((state) => ({ shield: Math.max(0, state.shield - amount) })),
   regenShield: () => set((state) => ({ shield: Math.min(100, state.shield + 1) })),
   setWarping: (isWarping) => set({ isWarping }),
+  setViewMode: (viewMode) => set({ viewMode }),
+  toggleViewMode: () => set((state) => ({ viewMode: state.viewMode === 'cockpit' ? 'chase' : 'cockpit' })),
   setCurrentShip: (currentShip) => set({ currentShip }),
 }))
