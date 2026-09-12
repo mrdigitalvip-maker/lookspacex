@@ -44,6 +44,7 @@ export function SpaceHUD() {
   const targetLocked = useMissionStore((state) => state.targetLocked)
 
   const shieldStatus = shield <= 20 ? 'CRITICAL' : shield <= 50 ? 'DAMAGED' : 'NOMINAL'
+  const viewLabel = viewMode === 'cockpit' ? 'COCKPIT FEED' : viewMode === 'cabin' ? 'CABIN INTERIOR' : 'CHASE FEED'
 
   const radarContacts = useMemo(() => {
     return ASTEROIDS.map((asteroid, index) => {
@@ -79,7 +80,7 @@ export function SpaceHUD() {
       </div>
 
       <div className="hud-top-center">
-        <span>{isWarping ? 'WARP VECTOR' : viewMode === 'cockpit' ? 'COCKPIT FEED' : 'CHASE FEED'}</span>
+        <span>{isWarping ? 'WARP VECTOR' : viewLabel}</span>
         <strong>
           X {position[0].toFixed(0)} · Y {position[1].toFixed(0)} · Z {position[2].toFixed(0)}
         </strong>
@@ -169,7 +170,7 @@ export function SpaceHUD() {
           <span><kbd>A</kbd><kbd>D</kbd> YAW</span>
           <span><kbd>↑</kbd><kbd>↓</kbd> PITCH</span>
           <span><kbd>Q</kbd><kbd>E</kbd> ROLL</span>
-          <span><kbd>C</kbd> CAMERA</span>
+          <span><kbd>C</kbd> COCKPIT / CABIN / CHASE</span>
           <span><kbd>T</kbd> TARGET</span>
           <span><kbd>R</kbd> WARP</span>
           <span><kbd>SHIFT</kbd> BOOST</span>
