@@ -14,7 +14,7 @@ export function PilotShip() {
   const leftThrusterRef = useRef<THREE.MeshStandardMaterial>(null)
   const rightThrusterRef = useRef<THREE.MeshStandardMaterial>(null)
   const keysRef = useRef<KeyState>({})
-  const speedRef = useRef(0)
+  const velocityRef = useRef(new THREE.Vector3())
   const telemetryRef = useRef(0)
   const { camera } = useThree()
   const setPosition = useShipStore((state) => state.setPosition)
@@ -23,6 +23,7 @@ export function PilotShip() {
   const fuel = useShipStore((state) => state.fuel)
 
   const forward = useMemo(() => new THREE.Vector3(), [])
+  const brakeDirection = useMemo(() => new THREE.Vector3(), [])
   const desiredCameraPosition = useMemo(() => new THREE.Vector3(), [])
   const desiredLookAt = useMemo(() => new THREE.Vector3(), [])
   const cameraOffset = useMemo(
@@ -57,33 +58,15 @@ export function PilotShip() {
 
   useFrame((state, delta) => {
     const ship = shipRef.current
-    if (!ship) {
-      return
-    }
+    if (!ship) return
 
     const keys = keysRef.current
     const accelerating = Boolean(keys.KeyW || keys.Space)
     const braking = Boolean(keys.KeyS)
     const boosting = Boolean((keys.ShiftLeft || keys.ShiftRight) && accelerating && fuel > 0)
     const maxSpeed = boosting ? GAME_CONFIG.physics.turboSpeed : GAME_CONFIG.physics.maxSpeed
-    const acceleration = boosting ? GAME_CONFIG.physics.acceleration * 3.2 : GAME_CONFIG.physics.acceleration
-
-    let targetSpeed = speedRef.current
-    if (accelerating && fuel > 0) {
-      targetSpeed = maxSpeed
-    } else if (braking) {
-      targetSpeed = -GAME_CONFIG.physics.maxSpeed * 0.28
-    } else {
-      targetSpeed = 0
-    }
-
-    const speedResponse = accelerating ? acceleration : GAME_CONFIG.physics.deceleration
-    const maxSpeedChange = speedResponse * delta
-    speedRef.current = THREE.MathUtils.clamp(
-      targetSpeed,
-      speedRef.current - maxSpeedChange,
-      speedRef.current + maxSpeedChange,
-    )
+    const acceleration = boosting ? GAME_CONFIG.physics.acceleration * 3.4 : GAME_CONFIG.physics.acceleration
+    const velocity = velocityRef.current
 
     const yawInput = Number(Boolean(keys.KeyA || keys.ArrowLeft)) - Number(Boolean(keys.KeyD || keys.ArrowRight))
     const pitchInput = Number(Boolean(keys.ArrowDown)) - Number(Boolean(keys.ArrowUp))
@@ -95,7 +78,26 @@ export function PilotShip() {
     ship.rotateZ(rollInput * rotationSpeed * 1.1 * delta)
 
     forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
-    ship.position.addScaledVector(forward, speedRef.current * delta)
+
+    if (accelerating && fuel > 0 && velocity.length() < maxSpeed) {
+      velocity.addScaledVector(forward, acceleration * delta)
+      if (velocity.length() > maxSpeed) velocity.setLength(maxSpeed)
+    }
+
+    if (braking) {
+      const speed = velocity.length()
+      if (speed > 0.8) {
+        brakeDirection.copy(velocity).normalize()
+        const nextSpeed = Math.max(0, speed - GAME_CONFIG.physics.deceleration * 2.2 * delta)
+        velocity.copy(brakeDirection).multiplyScalar(nextSpeed)
+      } else {
+        velocity.addScaledVector(forward, -GAME_CONFIG.physics.acceleration * 0.5 * delta)
+        const reverseLimit = GAME_CONFIG.physics.maxSpeed * 0.32
+        if (velocity.length() > reverseLimit) velocity.setLength(reverseLimit)
+      }
+    }
+
+    ship.position.addScaledVector(velocity, delta)
 
     desiredCameraPosition.copy(cameraOffset).applyQuaternion(ship.quaternion).add(ship.position)
     const cameraBlend = 1 - Math.exp(-CAMERA_DAMPING * delta)
@@ -103,23 +105,27 @@ export function PilotShip() {
     desiredLookAt.copy(ship.position).addScaledVector(forward, 22)
     camera.lookAt(desiredLookAt)
 
-    const enginePower = Math.min(1, Math.abs(speedRef.current) / Math.max(1, maxSpeed))
-    const pulse = 2.3 + enginePower * 7 + Math.sin(state.clock.elapsedTime * 18) * 0.35
-    if (leftThrusterRef.current) {
-      leftThrusterRef.current.emissiveIntensity = pulse
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const speedRatio = Math.min(1, velocity.length() / GAME_CONFIG.physics.turboSpeed)
+      const targetFov = GAME_CONFIG.camera.fov + speedRatio * 7 + (boosting ? 5 : 0)
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-4.5 * delta))
+      camera.updateProjectionMatrix()
     }
-    if (rightThrusterRef.current) {
-      rightThrusterRef.current.emissiveIntensity = pulse
-    }
+
+    const enginePower = Math.min(1, velocity.length() / Math.max(1, GAME_CONFIG.physics.turboSpeed))
+    const throttleGlow = accelerating ? 2.8 : 0.9
+    const pulse = throttleGlow + enginePower * 8 + Math.sin(state.clock.elapsedTime * 18) * 0.35
+    if (leftThrusterRef.current) leftThrusterRef.current.emissiveIntensity = pulse
+    if (rightThrusterRef.current) rightThrusterRef.current.emissiveIntensity = pulse
 
     telemetryRef.current += delta
     if (telemetryRef.current >= TELEMETRY_INTERVAL) {
       telemetryRef.current = 0
       setPosition([ship.position.x, ship.position.y, ship.position.z])
-      setVelocity(Math.abs(speedRef.current))
+      setVelocity(velocity.length())
 
       if (accelerating && fuel > 0) {
-        consumeFuel((boosting ? 0.085 : 0.018) * TELEMETRY_INTERVAL)
+        consumeFuel((boosting ? 0.095 : 0.02) * TELEMETRY_INTERVAL)
       }
     }
   })
