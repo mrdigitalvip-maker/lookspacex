@@ -34,3 +34,17 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Distribution smoke check
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/sw.js
+          test -f dist/manifest.webmanifest
+          test -f dist/icons/lookspace-192.png
+          test -f dist/icons/lookspace-512.png
+          test -n "$(find dist/assets -maxdepth 1 -type f -name '*.js' -print -quit)"
+          test -n "$(find dist/assets -maxdepth 1 -type f -name '*.css' -print -quit)"
+          grep -q '/assets/' dist/index.html
+          node -e "JSON.parse(require('fs').readFileSync('dist/manifest.webmanifest','utf8')); console.log('manifest ok')"
