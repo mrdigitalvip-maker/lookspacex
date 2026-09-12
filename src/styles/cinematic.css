@@ -1,0 +1,136 @@
+.cinematic-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 34%, rgba(0, 2, 7, 0.24) 100%);
+}
+
+.cinematic-letterbox {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: clamp(58px, 9vh, 108px);
+  background: #000;
+  box-shadow: 0 0 44px rgba(0, 0, 0, 0.8);
+}
+
+.cinematic-letterbox-top {
+  top: 0;
+}
+
+.cinematic-letterbox-bottom {
+  bottom: 0;
+}
+
+.cinematic-copy {
+  position: absolute;
+  left: clamp(24px, 7vw, 110px);
+  bottom: clamp(92px, 16vh, 180px);
+  display: grid;
+  gap: 7px;
+  max-width: min(620px, calc(100vw - 48px));
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.85);
+}
+
+.cinematic-copy span {
+  color: #6ee7ff;
+  font-size: clamp(8px, 0.8vw, 11px);
+  font-weight: 850;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.cinematic-copy strong {
+  color: #f7fbff;
+  font-size: clamp(24px, 4.2vw, 58px);
+  font-weight: 380;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cinematic-copy p {
+  margin: 4px 0 0;
+  color: rgba(201, 220, 233, 0.72);
+  font-size: clamp(11px, 1vw, 14px);
+  letter-spacing: 0.05em;
+}
+
+.cinematic-mission-copy {
+  left: 50%;
+  bottom: 50%;
+  width: min(680px, calc(100vw - 44px));
+  transform: translate(-50%, 50%);
+  text-align: center;
+}
+
+.cinematic-mission-copy strong {
+  font-size: clamp(28px, 5vw, 64px);
+}
+
+.cinematic-scanline {
+  position: absolute;
+  inset: -35% 0 auto;
+  height: 24%;
+  background: linear-gradient(180deg, transparent, rgba(110, 231, 255, 0.055), transparent);
+  animation: cinematic-scan 3.2s linear infinite;
+}
+
+.launch-status {
+  position: absolute;
+  right: clamp(24px, 5vw, 80px);
+  bottom: clamp(90px, 13vh, 148px);
+  z-index: 76;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(190, 235, 244, 0.7);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  pointer-events: none;
+}
+
+.launch-status i {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(110, 231, 255, 0.1), #6ee7ff);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.7);
+  transform-origin: right;
+  animation: launch-status-line 1.2s ease-in-out infinite;
+}
+
+.space-preload {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(11, 61, 82, 0.18), #01030a 58%);
+}
+
+@keyframes cinematic-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(620%); }
+}
+
+@keyframes launch-status-line {
+  0%, 100% { transform: scaleX(0.35); opacity: 0.35; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  .cinematic-copy {
+    left: 24px;
+    bottom: 110px;
+  }
+
+  .cinematic-mission-copy {
+    left: 50%;
+    bottom: 50%;
+  }
+
+  .launch-status {
+    right: 18px;
+    bottom: 80px;
+  }
+}
