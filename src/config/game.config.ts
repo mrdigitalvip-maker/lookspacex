@@ -1,12 +1,12 @@
 export const GAME_CONFIG = {
-  version: '0.6.0',
+  version: '0.7.0',
   name: 'LookSpace',
   debug: false,
   physics: {
-    maxSpeed: 52,
-    turboSpeed: 180,
-    acceleration: 16,
-    deceleration: 9,
+    maxSpeed: 56,
+    turboSpeed: 190,
+    acceleration: 18,
+    deceleration: 12,
     rotationSpeed: 1.35,
   },
   camera: {
