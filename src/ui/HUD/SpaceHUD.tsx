@@ -32,6 +32,7 @@ export function SpaceHUD() {
   const shield = useShipStore((state) => state.shield)
   const energy = useShipStore((state) => state.energy)
   const isWarping = useShipStore((state) => state.isWarping)
+  const viewMode = useShipStore((state) => state.viewMode)
   const notifications = useUIStore((state) => state.notifications)
   const missionId = useMissionStore((state) => state.id)
   const missionTitle = useMissionStore((state) => state.title)
@@ -78,7 +79,7 @@ export function SpaceHUD() {
       </div>
 
       <div className="hud-top-center">
-        <span>{isWarping ? 'WARP VECTOR' : 'LOCAL FRAME'}</span>
+        <span>{isWarping ? 'WARP VECTOR' : viewMode === 'cockpit' ? 'COCKPIT FEED' : 'CHASE FEED'}</span>
         <strong>
           X {position[0].toFixed(0)} · Y {position[1].toFixed(0)} · Z {position[2].toFixed(0)}
         </strong>
@@ -87,7 +88,7 @@ export function SpaceHUD() {
       <div className="hud-top-right hud-panel">
         <p className="hud-kicker">SHIP STATUS</p>
         <strong className="ship-name">{ship?.name ?? 'Aurora Scout'}</strong>
-        <span className="ship-class">SHIELD {shieldStatus} // {isWarping ? 'WARP ACTIVE' : 'EXPLORER CLASS'}</span>
+        <span className="ship-class">SHIELD {shieldStatus} // {isWarping ? 'WARP ACTIVE' : viewMode.toUpperCase()}</span>
       </div>
 
       <div className={`mission-panel ${missionStatus === 'completed' ? 'mission-complete' : ''}`}>
@@ -168,6 +169,7 @@ export function SpaceHUD() {
           <span><kbd>A</kbd><kbd>D</kbd> YAW</span>
           <span><kbd>↑</kbd><kbd>↓</kbd> PITCH</span>
           <span><kbd>Q</kbd><kbd>E</kbd> ROLL</span>
+          <span><kbd>C</kbd> CAMERA</span>
           <span><kbd>T</kbd> TARGET</span>
           <span><kbd>R</kbd> WARP</span>
           <span><kbd>SHIFT</kbd> BOOST</span>
