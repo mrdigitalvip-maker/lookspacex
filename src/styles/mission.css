@@ -1,0 +1,99 @@
+.mission-panel {
+  position: absolute;
+  top: 96px;
+  left: 50%;
+  width: min(360px, calc(100vw - 44px));
+  transform: translateX(-50%);
+  padding: 14px 16px 13px;
+  border: 1px solid rgba(110, 231, 255, 0.18);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(5, 13, 26, 0.78), rgba(2, 7, 16, 0.52));
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(16px);
+}
+
+.mission-row,
+.mission-target-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-row span,
+.mission-target-line span {
+  color: #6ee7ff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.mission-row strong,
+.mission-target-line strong {
+  color: #dffbff;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.mission-panel h3 {
+  margin: 10px 0 4px;
+  color: #f7fbff;
+  font-size: 14px;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+}
+
+.mission-panel p {
+  margin: 0 0 11px;
+  color: #8092a8;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.mission-complete {
+  border-color: rgba(140, 255, 193, 0.28);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22), 0 0 34px rgba(140, 255, 193, 0.06);
+}
+
+.mission-complete .mission-row span,
+.mission-complete .mission-row strong,
+.mission-complete .mission-target-line span,
+.mission-complete .mission-target-line strong {
+  color: #8cffc1;
+}
+
+.target-lock {
+  position: absolute;
+  top: calc(50% - 82px);
+  left: 50%;
+  display: grid;
+  gap: 2px;
+  min-width: 86px;
+  transform: translateX(-50%);
+  color: #6ee7ff;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+
+.target-lock span {
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+}
+
+.target-lock strong {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 760px) {
+  .mission-panel {
+    top: 82px;
+    width: min(310px, calc(100vw - 28px));
+  }
+
+  .target-lock {
+    top: calc(50% - 68px);
+  }
+}

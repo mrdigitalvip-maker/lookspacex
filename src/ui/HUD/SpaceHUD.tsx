@@ -1,3 +1,4 @@
+import { useMissionStore } from '@/stores/missionStore'
 import { usePlayerStore } from '@/stores/playerStore'
 import { useShipStore } from '@/stores/shipStore'
 import { useUIStore } from '@/stores/uiStore'
@@ -27,6 +28,12 @@ export function SpaceHUD() {
   const shield = useShipStore((state) => state.shield)
   const energy = useShipStore((state) => state.energy)
   const notifications = useUIStore((state) => state.notifications)
+  const missionId = useMissionStore((state) => state.id)
+  const missionTitle = useMissionStore((state) => state.title)
+  const missionObjective = useMissionStore((state) => state.objective)
+  const targetName = useMissionStore((state) => state.targetName)
+  const distance = useMissionStore((state) => state.distance)
+  const missionStatus = useMissionStore((state) => state.status)
 
   return (
     <div className="space-hud">
@@ -54,11 +61,31 @@ export function SpaceHUD() {
         <span className="ship-class">EXPLORER CLASS // LINK STABLE</span>
       </div>
 
+      <div className={`mission-panel ${missionStatus === 'completed' ? 'mission-complete' : ''}`}>
+        <div className="mission-row">
+          <span>{missionId}</span>
+          <strong>{missionStatus === 'completed' ? 'COMPLETE' : 'ACTIVE'}</strong>
+        </div>
+        <h3>{missionTitle}</h3>
+        <p>{missionStatus === 'completed' ? 'Navigation beacon reached. Mission data secured.' : missionObjective}</p>
+        <div className="mission-target-line">
+          <span>{targetName}</span>
+          <strong>{missionStatus === 'completed' ? 'ARRIVED' : `${distance.toFixed(0)} u`}</strong>
+        </div>
+      </div>
+
       <div className="flight-reticle" aria-hidden="true">
         <span className="reticle-horizontal" />
         <span className="reticle-vertical" />
         <i />
       </div>
+
+      {missionStatus === 'active' && (
+        <div className="target-lock" aria-hidden="true">
+          <span>{targetName}</span>
+          <strong>{distance.toFixed(0)} u</strong>
+        </div>
+      )}
 
       <div className="hud-bottom-left hud-panel radar-panel">
         <div className="radar-header">
@@ -82,7 +109,7 @@ export function SpaceHUD() {
           <em>u/s</em>
         </div>
         <div className="control-strip">
-          <span><kbd>W</kbd><kbd>S</kbd> THRUST</span>
+          <span><kbd>W</kbd><kbd>S</kbd> THRUST / BRAKE</span>
           <span><kbd>A</kbd><kbd>D</kbd> YAW</span>
           <span><kbd>↑</kbd><kbd>↓</kbd> PITCH</span>
           <span><kbd>Q</kbd><kbd>E</kbd> ROLL</span>
