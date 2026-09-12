@@ -48,7 +48,7 @@ export const useShipStore = create<ShipStore>((set) => ({
   shield: 100,
   energy: 100,
   isWarping: false,
-  viewMode: 'cockpit',
+  viewMode: 'chase',
   setPosition: (position) => set({ position }),
   setVelocity: (velocity) => set({ velocity }),
   consumeFuel: (amount) => set((state) => ({ fuel: Math.max(0, state.fuel - amount) })),
