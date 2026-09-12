@@ -1,4 +1,3 @@
-import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { ASTEROID_COUNT, ASTEROIDS } from '@/game/world/asteroidField.data'
@@ -22,12 +21,6 @@ export function AsteroidField() {
     mesh.instanceMatrix.needsUpdate = true
     mesh.computeBoundingSphere()
   }, [dummy])
-
-  useFrame((_, delta) => {
-    const mesh = meshRef.current
-    if (!mesh) return
-    mesh.rotation.y += delta * 0.004
-  })
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, ASTEROID_COUNT]} frustumCulled>
