@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  version: '0.7.0',
+  version: '0.8.0',
   name: 'LookSpace',
   debug: false,
   physics: {

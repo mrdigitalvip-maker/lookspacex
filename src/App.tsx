@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { GAME_CONFIG } from '@/config/game.config'
-import { SpaceScene } from '@/game/world/SpaceScene'
 import { useGameStore } from '@/stores/gameStore'
 import { SpaceHUD } from '@/ui/HUD/SpaceHUD'
+
+const SpaceScene = lazy(() =>
+  import('@/game/world/SpaceScene').then((module) => ({ default: module.SpaceScene })),
+)
 
 function App() {
   const scene = useGameStore((state) => state.currentScene)
@@ -11,6 +14,7 @@ function App() {
   const setScene = useGameStore((state) => state.setScene)
   const setLoading = useGameStore((state) => state.setLoading)
   const launchTimerRef = useRef<number | null>(null)
+  const shouldMountFlight = scene === 'LOADING' || scene === 'SPACE'
 
   useEffect(() => {
     const splashTimer = window.setTimeout(() => {
@@ -45,13 +49,17 @@ function App() {
 
   return (
     <main className="lookspace-shell">
-      <div className="space-canvas" aria-hidden="true">
-        <SpaceScene />
-      </div>
+      {shouldMountFlight ? (
+        <div className="space-canvas" aria-hidden="true">
+          <Suspense fallback={null}>
+            <SpaceScene />
+          </Suspense>
+        </div>
+      ) : null}
 
       {scene === 'SPACE' ? <SpaceHUD /> : null}
 
-      <div className="build-chip">FLIGHT FOUNDATION // {GAME_CONFIG.version}</div>
+      <div className="build-chip">FLIGHT CORE // {GAME_CONFIG.version}</div>
 
       {scene === 'SPLASH' ? (
         <motion.section
@@ -111,6 +119,7 @@ function App() {
               <span>A/D yaw</span>
               <span>Arrows pitch</span>
               <span>Q/E roll</span>
+              <span>T target</span>
               <span>Shift boost</span>
             </div>
           </motion.div>
@@ -127,7 +136,7 @@ function App() {
             </div>
             <p className="eyebrow">AURORA SCOUT // LINK ESTABLISHED</p>
             <h2>Transferring flight control</h2>
-            <p>Calibrating navigation, telemetry and local stellar coordinates.</p>
+            <p>Calibrating navigation, telemetry, targeting and local stellar coordinates.</p>
           </div>
         </section>
       ) : null}

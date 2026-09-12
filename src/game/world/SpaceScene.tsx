@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PilotShip } from '@/game/ship/PilotShip'
+import { CollisionSystem } from '@/game/systems/CollisionSystem'
 import { AsteroidField } from '@/game/world/AsteroidField'
 import { MissionBeacon } from '@/game/world/MissionBeacon'
 import { SolarSystem } from '@/game/world/SolarSystem'
@@ -30,6 +31,7 @@ export function SpaceScene() {
       <SolarSystem />
       <AsteroidField />
       <MissionBeacon />
+      <CollisionSystem />
       <PilotShip />
     </Canvas>
   )

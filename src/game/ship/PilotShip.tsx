@@ -2,12 +2,16 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { GAME_CONFIG } from '@/config/game.config'
+import { useMissionStore } from '@/stores/missionStore'
 import { useShipStore } from '@/stores/shipStore'
+import { useUIStore } from '@/stores/uiStore'
 
 type KeyState = Record<string, boolean>
 
 const CAMERA_DAMPING = 5.5
 const TELEMETRY_INTERVAL = 0.08
+const TARGET_LOCK_RANGE = 460
+const TARGET_LOCK_DOT = 0.62
 
 export function PilotShip() {
   const shipRef = useRef<THREE.Group>(null)
@@ -26,6 +30,8 @@ export function PilotShip() {
   const brakeDirection = useMemo(() => new THREE.Vector3(), [])
   const desiredCameraPosition = useMemo(() => new THREE.Vector3(), [])
   const desiredLookAt = useMemo(() => new THREE.Vector3(), [])
+  const targetDirection = useMemo(() => new THREE.Vector3(), [])
+  const targetPosition = useMemo(() => new THREE.Vector3(), [])
   const cameraOffset = useMemo(
     () => new THREE.Vector3(0, GAME_CONFIG.camera.thirdPersonHeight, GAME_CONFIG.camera.thirdPersonDistance),
     [],
@@ -39,7 +45,38 @@ export function PilotShip() {
       }
     }
 
-    const handleKeyDown = (event: KeyboardEvent) => setKey(event, true)
+    const attemptTargetLock = () => {
+      const ship = shipRef.current
+      if (!ship) return
+
+      const mission = useMissionStore.getState()
+      if (mission.status !== 'active') return
+
+      if (mission.targetLocked) {
+        mission.setTargetLocked(false)
+        useUIStore.getState().addNotification(`TARGET RELEASED // ${mission.targetName}`, 'info')
+        return
+      }
+
+      forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
+      targetPosition.set(...mission.target)
+      targetDirection.copy(targetPosition).sub(ship.position)
+      const distance = targetDirection.length()
+      targetDirection.normalize()
+      const alignment = forward.dot(targetDirection)
+
+      if (distance <= TARGET_LOCK_RANGE && alignment >= TARGET_LOCK_DOT) {
+        mission.setTargetLocked(true)
+        useUIStore.getState().addNotification(`TARGET LOCKED // ${mission.targetName}`, 'success')
+      } else {
+        useUIStore.getState().addNotification('TARGET LOCK FAILED // Align nose with NAV-01', 'warning')
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      setKey(event, true)
+      if (event.code === 'KeyT' && !event.repeat) attemptTargetLock()
+    }
     const handleKeyUp = (event: KeyboardEvent) => setKey(event, false)
     const handleBlur = () => {
       keysRef.current = {}
@@ -54,7 +91,7 @@ export function PilotShip() {
       window.removeEventListener('keyup', handleKeyUp)
       window.removeEventListener('blur', handleBlur)
     }
-  }, [])
+  }, [forward, targetDirection, targetPosition])
 
   useFrame((state, delta) => {
     const ship = shipRef.current

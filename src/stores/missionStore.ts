@@ -11,7 +11,9 @@ interface MissionState {
   arrivalRadius: number
   distance: number
   status: MissionStatus
+  targetLocked: boolean
   setDistance: (distance: number) => void
+  setTargetLocked: (targetLocked: boolean) => void
   completeMission: () => void
 }
 
@@ -24,6 +26,8 @@ export const useMissionStore = create<MissionState>((set) => ({
   arrivalRadius: 16,
   distance: 180,
   status: 'active',
+  targetLocked: false,
   setDistance: (distance) => set({ distance }),
-  completeMission: () => set({ status: 'completed', distance: 0 }),
+  setTargetLocked: (targetLocked) => set({ targetLocked }),
+  completeMission: () => set({ status: 'completed', distance: 0, targetLocked: false }),
 }))

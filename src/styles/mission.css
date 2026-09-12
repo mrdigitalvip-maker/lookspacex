@@ -73,6 +73,7 @@
   color: #6ee7ff;
   text-align: center;
   text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+  transition: color 160ms ease, text-shadow 160ms ease, transform 160ms ease;
 }
 
 .target-lock span {
@@ -85,6 +86,38 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+.target-lock-active {
+  color: #ff9b72;
+  text-shadow: 0 0 16px rgba(255, 126, 77, 0.65);
+  transform: translateX(-50%) scale(1.04);
+}
+
+.reticle-locked {
+  border-color: rgba(255, 153, 114, 0.58) !important;
+  box-shadow: 0 0 34px rgba(255, 126, 77, 0.14) !important;
+}
+
+.reticle-locked .reticle-horizontal,
+.reticle-locked .reticle-vertical,
+.reticle-locked i {
+  background: #ff9b72 !important;
+  box-shadow: 0 0 12px rgba(255, 126, 77, 0.85);
+}
+
+.shield-critical::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 42%, rgba(255, 48, 71, 0.12) 100%);
+  animation: shield-critical-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes shield-critical-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
 }
 
 @media (max-width: 760px) {
