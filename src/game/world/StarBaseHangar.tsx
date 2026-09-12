@@ -2,6 +2,8 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import * as THREE from 'three'
 import { useGameStore } from '@/stores/gameStore'
+import { useShipStore } from '@/stores/shipStore'
+import { useStarBaseStore } from '@/stores/starbaseStore'
 
 const FLOOR_Z = 18
 const EXIT_Z = -18
@@ -16,13 +18,19 @@ export function StarBaseHangar() {
 
   useFrame((state, delta) => {
     const scene = useGameStore.getState().currentScene
+    const shipPosition = useShipStore.getState().position
+    const dockingState = useStarBaseStore.getState().dockingState
+
     if (scene === 'LOADING' && launchStartedRef.current === null) {
       launchStartedRef.current = state.clock.elapsedTime
     }
 
     const elapsed = launchStartedRef.current === null ? 0 : state.clock.elapsedTime - launchStartedRef.current
-    const departure = scene === 'SPACE' ? 1 : THREE.MathUtils.smoothstep(elapsed, 1.1, 3.4)
-    const doorX = THREE.MathUtils.lerp(3.6, 10.8, departure)
+    const launchOpen = scene === 'LOADING' ? THREE.MathUtils.smoothstep(elapsed, 1.1, 3.4) : 0
+    const distanceToBase = Math.hypot(shipPosition[0], shipPosition[1], shipPosition[2] - 20)
+    const returnOpen = scene === 'SPACE' && (distanceToBase < 230 || dockingState !== 'away') ? 1 : 0
+    const openAmount = Math.max(launchOpen, returnOpen)
+    const doorX = THREE.MathUtils.lerp(3.6, 10.8, openAmount)
 
     if (leftDoorRef.current) {
       leftDoorRef.current.position.x = THREE.MathUtils.damp(leftDoorRef.current.position.x, -doorX, 7, delta)
@@ -31,8 +39,9 @@ export function StarBaseHangar() {
       rightDoorRef.current.position.x = THREE.MathUtils.damp(rightDoorRef.current.position.x, doorX, 7, delta)
     }
 
-    const armX = THREE.MathUtils.lerp(5.4, 9.2, departure)
-    const armTilt = THREE.MathUtils.lerp(0, 0.7, departure)
+    const armsDocked = dockingState === 'docked' ? 0 : Math.max(launchOpen, dockingState === 'docking' ? 1 : 0)
+    const armX = THREE.MathUtils.lerp(5.4, 9.2, armsDocked)
+    const armTilt = THREE.MathUtils.lerp(0, 0.7, armsDocked)
     if (leftArmRef.current) {
       leftArmRef.current.position.x = THREE.MathUtils.damp(leftArmRef.current.position.x, -armX, 6, delta)
       leftArmRef.current.rotation.z = THREE.MathUtils.damp(leftArmRef.current.rotation.z, armTilt, 6, delta)
@@ -43,7 +52,9 @@ export function StarBaseHangar() {
     }
 
     if (beaconRef.current) {
-      beaconRef.current.intensity = 6 + Math.sin(state.clock.elapsedTime * 6) * 2.2
+      const dockingBoost = dockingState === 'approach' || dockingState === 'docking' ? 5 : 0
+      beaconRef.current.intensity = 6 + dockingBoost + Math.sin(state.clock.elapsedTime * 6) * 2.2
+      beaconRef.current.color.set(dockingState === 'docked' ? '#8cffc1' : '#22d3ee')
     }
   })
 

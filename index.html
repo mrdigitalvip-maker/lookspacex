@@ -13,9 +13,64 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/lookspace-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/lookspace-180.png" />
     <title>LookSpace</title>
+    <style>
+      #boot-fallback{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#083247 0%,#01030a 58%);color:#f7fbff;font-family:Inter,system-ui,sans-serif;z-index:9999}
+      #boot-fallback>div{text-align:center;padding:24px;max-width:620px}
+      #boot-fallback .boot-kicker{color:#6ee7ff;font-size:10px;letter-spacing:.28em}
+      #boot-fallback h1{font-weight:320;letter-spacing:.18em;margin:16px 0 12px}
+      #boot-fallback p{color:#91a2b8;line-height:1.7}
+      #boot-fallback button{display:none;margin:20px auto 0;min-height:48px;padding:0 22px;border:0;border-radius:13px;background:linear-gradient(105deg,#a6f3ff,#43d7ef);color:#031018;font-weight:800;cursor:pointer}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-fallback">
+        <div>
+          <div class="boot-kicker">LOOKSPACE // FLIGHT CORE</div>
+          <h1>INITIALIZING</h1>
+          <p id="boot-message">Loading navigation, cockpit and StarBase systems…</p>
+          <button id="boot-recover" type="button">Recover current build</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      window.__LOOKSPACE_BOOTED__ = false;
+      async function recoverLookSpace() {
+        try {
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((registration) => registration.unregister()));
+          }
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.filter((key) => key.startsWith('lookspace-')).map((key) => caches.delete(key)));
+          }
+        } catch (error) {
+          console.warn('[LookSpace boot recovery]', error);
+        }
+        const url = new URL(location.href);
+        url.searchParams.set('fresh', Date.now().toString());
+        location.replace(url.toString());
+      }
+      function showBootRecovery(messageText) {
+        if (window.__LOOKSPACE_BOOTED__) return;
+        const message = document.getElementById('boot-message');
+        const button = document.getElementById('boot-recover');
+        if (message) message.textContent = messageText;
+        if (button) button.style.display = 'block';
+      }
+      window.__recoverLookSpace = recoverLookSpace;
+      document.getElementById('boot-recover').addEventListener('click', recoverLookSpace);
+      window.addEventListener('error', () => {
+        showBootRecovery('A web-game module failed to start. Recovery will load a fresh build.');
+      });
+      window.addEventListener('unhandledrejection', () => {
+        showBootRecovery('A game module could not finish loading. Recovery will clear stale files and retry.');
+      });
+      setTimeout(() => {
+        showBootRecovery('Startup is taking too long. Clear stale game files and reload the current build.');
+      }, 7000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 export type MissionStatus = 'active' | 'completed'
+export type MissionCompletionMode = 'arrival' | 'dock'
 
 interface MissionDefinition {
   id: string
@@ -9,6 +10,7 @@ interface MissionDefinition {
   targetName: string
   target: [number, number, number]
   arrivalRadius: number
+  completionMode: MissionCompletionMode
 }
 
 const MISSIONS: MissionDefinition[] = [
@@ -19,6 +21,7 @@ const MISSIONS: MissionDefinition[] = [
     targetName: 'NAV-01',
     target: [0, 4, -155],
     arrivalRadius: 16,
+    completionMode: 'arrival',
   },
   {
     id: 'M002',
@@ -27,6 +30,16 @@ const MISSIONS: MissionDefinition[] = [
     targetName: 'HELIOS GATE',
     target: [0, 20, -980],
     arrivalRadius: 64,
+    completionMode: 'arrival',
+  },
+  {
+    id: 'M003',
+    title: 'Home Vector',
+    objective: 'Lock HELIOS OUTPOST [T], warp home [R], then request docking [G]',
+    targetName: 'HELIOS OUTPOST',
+    target: [0, 2, -55],
+    arrivalRadius: 115,
+    completionMode: 'dock',
   },
 ]
 

@@ -7,17 +7,21 @@ import { CockpitInterior } from '@/game/ship/CockpitInterior'
 import { useGameStore } from '@/stores/gameStore'
 import { useMissionStore } from '@/stores/missionStore'
 import { useShipStore } from '@/stores/shipStore'
+import { useStarBaseStore } from '@/stores/starbaseStore'
 import { useUIStore } from '@/stores/uiStore'
 
 type KeyState = Record<string, boolean>
 
 const CAMERA_DAMPING = 5.5
 const TELEMETRY_INTERVAL = 0.08
-const TARGET_LOCK_RANGE = 900
+const TARGET_LOCK_RANGE = 1200
 const TARGET_LOCK_DOT = 0.62
 const WARP_DURATION = 3.25
 const WARP_SPEED = 340
 const STARBASE_LAUNCH_DURATION = 6.2
+const DOCKING_DURATION = 4.2
+const DOCKING_RANGE = 150
+const DOCK_POSITION = new THREE.Vector3(0, -0.18, 39)
 
 export function PilotShip() {
   const shipRef = useRef<THREE.Group>(null)
@@ -31,12 +35,15 @@ export function PilotShip() {
   const telemetryRef = useRef(0)
   const launchStartRef = useRef<number | null>(null)
   const warpStartedRef = useRef<number | null>(null)
+  const dockingStartRef = useRef<number | null>(null)
+  const dockingOriginRef = useRef(new THREE.Vector3())
   const { camera } = useThree()
   const setPosition = useShipStore((state) => state.setPosition)
   const setVelocity = useShipStore((state) => state.setVelocity)
   const consumeFuel = useShipStore((state) => state.consumeFuel)
   const fuel = useShipStore((state) => state.fuel)
   const viewMode = useShipStore((state) => state.viewMode)
+  const currentShip = useShipStore((state) => state.currentShip)
 
   const forward = useMemo(() => new THREE.Vector3(), [])
   const brakeDirection = useMemo(() => new THREE.Vector3(), [])
@@ -97,7 +104,8 @@ export function PilotShip() {
 
       const mission = useMissionStore.getState()
       const shipState = useShipStore.getState()
-      if (mission.id !== 'M002' || mission.status !== 'active') {
+      const warpMission = mission.id === 'M002' || mission.id === 'M003'
+      if (!warpMission || mission.status !== 'active') {
         useUIStore.getState().addNotification('WARP OFFLINE // No authorized vector', 'warning')
         return
       }
@@ -116,7 +124,44 @@ export function PilotShip() {
       shipState.setWarping(true)
       warpStartedRef.current = performance.now() / 1000
       flightAudio.warpPulse()
-      useUIStore.getState().addNotification('WARP DRIVE // ENGAGED', 'success')
+      useUIStore.getState().addNotification(`WARP DRIVE // ${mission.targetName}`, 'success')
+    }
+
+    const attemptDocking = () => {
+      const ship = shipRef.current
+      if (!ship || useGameStore.getState().isPaused) return
+
+      const mission = useMissionStore.getState()
+      const base = useStarBaseStore.getState()
+      if (mission.id !== 'M003' || mission.status !== 'active') {
+        useUIStore.getState().addNotification('DOCKING OFFLINE // No active return vector', 'warning')
+        return
+      }
+
+      targetPosition.set(...mission.target)
+      const distance = ship.position.distanceTo(targetPosition)
+      if (distance > DOCKING_RANGE) {
+        useUIStore.getState().addNotification(`DOCKING DENIED // Approach HELIOS OUTPOST (${distance.toFixed(0)} u)`, 'warning')
+        return
+      }
+
+      base.setDockingState('docking')
+      base.setServicesOpen(false)
+      dockingOriginRef.current.copy(ship.position)
+      dockingStartRef.current = performance.now() / 1000
+      velocityRef.current.set(0, 0, 0)
+      useShipStore.getState().setWarping(false)
+      mission.setTargetLocked(false)
+      useUIStore.getState().addNotification('HELIOS CONTROL // AUTODOCK ENGAGED', 'success')
+    }
+
+    const toggleServices = () => {
+      const base = useStarBaseStore.getState()
+      if (base.dockingState !== 'docked') {
+        useUIStore.getState().addNotification('STARBASE SERVICES // Dock first', 'warning')
+        return
+      }
+      base.toggleServices()
     }
 
     const toggleCamera = () => {
@@ -133,6 +178,8 @@ export function PilotShip() {
       if (event.repeat) return
       if (event.code === 'KeyT') attemptTargetLock()
       if (event.code === 'KeyR') attemptWarp()
+      if (event.code === 'KeyG') attemptDocking()
+      if (event.code === 'KeyH') toggleServices()
       if (event.code === 'KeyC') toggleCamera()
     }
     const handleKeyUp = (event: KeyboardEvent) => setKey(event, false)
@@ -158,6 +205,7 @@ export function PilotShip() {
     const gameState = useGameStore.getState()
     const shipState = useShipStore.getState()
     const mission = useMissionStore.getState()
+    const baseState = useStarBaseStore.getState()
     const warping = shipState.isWarping
 
     forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
@@ -227,6 +275,45 @@ export function PilotShip() {
     launchStartRef.current = null
     if (exteriorRef.current) exteriorRef.current.visible = shipState.viewMode === 'chase'
 
+    if (mission.id === 'M003' && mission.status === 'active' && mission.distance <= 220 && baseState.dockingState === 'away') {
+      baseState.setDockingState('approach')
+      useUIStore.getState().addNotification('HELIOS CONTROL // Docking corridor available [G]', 'info')
+    }
+
+    if (baseState.dockingState === 'docking') {
+      if (dockingStartRef.current === null) dockingStartRef.current = performance.now() / 1000
+      const elapsed = performance.now() / 1000 - dockingStartRef.current
+      const t = THREE.MathUtils.clamp(elapsed / DOCKING_DURATION, 0, 1)
+      const eased = THREE.MathUtils.smoothstep(t, 0, 1)
+      velocityRef.current.set(0, 0, 0)
+      ship.position.copy(dockingOriginRef.current).lerp(DOCK_POSITION, eased)
+      ship.quaternion.slerp(new THREE.Quaternion(), 1 - Math.exp(-5 * delta))
+
+      desiredCameraPosition.set(8.8, 4.3, 10.5).add(ship.position)
+      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-4.5 * delta))
+      camera.lookAt(ship.position)
+      if (exteriorRef.current) exteriorRef.current.visible = true
+
+      setPosition([ship.position.x, ship.position.y, ship.position.z])
+      setVelocity(0)
+
+      if (t >= 1) {
+        baseState.setDockingState('docked')
+        shipState.setViewMode('cabin')
+        dockingStartRef.current = null
+        mission.completeMission()
+        useUIStore.getState().addNotification('DOCKING COMPLETE // Helios services available [H]', 'success')
+      }
+      return
+    }
+
+    if (baseState.dockingState === 'docked') {
+      velocityRef.current.set(0, 0, 0)
+      ship.position.copy(DOCK_POSITION)
+      setPosition([ship.position.x, ship.position.y, ship.position.z])
+      setVelocity(0)
+    }
+
     if (gameState.isPaused) {
       const angle = state.clock.elapsedTime * 0.22
       desiredCameraPosition
@@ -238,16 +325,17 @@ export function PilotShip() {
     }
 
     const keys = keysRef.current
-    const accelerating = Boolean(keys.KeyW || keys.Space)
-    const braking = Boolean(keys.KeyS)
+    const flightLocked = baseState.dockingState === 'docked'
+    const accelerating = !flightLocked && Boolean(keys.KeyW || keys.Space)
+    const braking = !flightLocked && Boolean(keys.KeyS)
     const boosting = Boolean((keys.ShiftLeft || keys.ShiftRight) && accelerating && fuel > 0 && !warping)
     const maxSpeed = boosting ? GAME_CONFIG.physics.turboSpeed : GAME_CONFIG.physics.maxSpeed
     const acceleration = boosting ? GAME_CONFIG.physics.acceleration * 3.4 : GAME_CONFIG.physics.acceleration
     const velocity = velocityRef.current
 
-    const yawInput = warping ? 0 : Number(Boolean(keys.KeyA || keys.ArrowLeft)) - Number(Boolean(keys.KeyD || keys.ArrowRight))
-    const pitchInput = warping ? 0 : Number(Boolean(keys.ArrowDown)) - Number(Boolean(keys.ArrowUp))
-    const rollInput = warping ? 0 : Number(Boolean(keys.KeyQ)) - Number(Boolean(keys.KeyE))
+    const yawInput = warping || flightLocked ? 0 : Number(Boolean(keys.KeyA || keys.ArrowLeft)) - Number(Boolean(keys.KeyD || keys.ArrowRight))
+    const pitchInput = warping || flightLocked ? 0 : Number(Boolean(keys.ArrowDown)) - Number(Boolean(keys.ArrowUp))
+    const rollInput = warping || flightLocked ? 0 : Number(Boolean(keys.KeyQ)) - Number(Boolean(keys.KeyE))
     const rotationSpeed = GAME_CONFIG.physics.rotationSpeed
 
     ship.rotateY(yawInput * rotationSpeed * delta)
@@ -269,7 +357,7 @@ export function PilotShip() {
         if (velocity.length() > 82) velocity.setLength(82)
         useUIStore.getState().addNotification('WARP EXIT // Navigation lock restored', 'info')
       }
-    } else {
+    } else if (!flightLocked) {
       if (accelerating && fuel > 0 && velocity.length() < maxSpeed) {
         velocity.addScaledVector(forward, acceleration * delta)
         if (velocity.length() > maxSpeed) velocity.setLength(maxSpeed)
@@ -289,7 +377,7 @@ export function PilotShip() {
       }
     }
 
-    ship.position.addScaledVector(velocity, delta)
+    if (!flightLocked) ship.position.addScaledVector(velocity, delta)
 
     const cockpit = shipState.viewMode === 'cockpit'
     const cabin = shipState.viewMode === 'cabin'
@@ -344,6 +432,9 @@ export function PilotShip() {
     }
   })
 
+  const hullColor = currentShip?.id === 'vesper-interceptor' ? '#22173f' : currentShip?.id === 'atlas-hauler' ? '#3a2a12' : '#182238'
+  const accentColor = currentShip?.placeholder_color ?? '#6ee7ff'
+
   return (
     <group ref={shipRef} position={[0, -0.2, 42]} rotation={[0, 0, 0]}>
       <CockpitInterior />
@@ -351,12 +442,12 @@ export function PilotShip() {
       <group ref={exteriorRef} visible={viewMode === 'chase'}>
         <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
           <coneGeometry args={[1.25, 5.2, 6]} />
-          <meshStandardMaterial color="#182238" metalness={0.88} roughness={0.22} />
+          <meshStandardMaterial color={hullColor} metalness={0.88} roughness={0.22} />
         </mesh>
 
         <mesh position={[0, 0.55, -0.65]} scale={[0.72, 0.35, 1.15]}>
           <sphereGeometry args={[1, 32, 20]} />
-          <meshStandardMaterial color="#6ee7ff" emissive="#0ea5e9" emissiveIntensity={1.4} metalness={0.3} roughness={0.08} transparent opacity={0.88} />
+          <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={1.2} metalness={0.3} roughness={0.08} transparent opacity={0.82} />
         </mesh>
 
         <mesh position={[-1.7, -0.12, 0.2]} rotation={[0, 0.08, 0.08]}>
@@ -396,7 +487,7 @@ export function PilotShip() {
         </mesh>
       </group>
 
-      <pointLight position={[0, 0, 2.7]} color="#22d3ee" intensity={3.2} distance={14} />
+      <pointLight position={[0, 0, 2.7]} color={accentColor} intensity={3.2} distance={14} />
     </group>
   )
 }
