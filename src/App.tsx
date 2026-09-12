@@ -114,7 +114,7 @@ function App() {
       ) : null}
 
       {scene === 'SPACE' && cinematicMode !== 'mission-complete' ? <SpaceHUD /> : null}
-      {scene === 'SPACE' ? <StarBasePanel /> : null}
+      {scene === 'SPACE' && cinematicMode !== 'mission-complete' ? <StarBasePanel /> : null}
 
       <div className="build-chip">STARBASE GAMEPLAY // {GAME_CONFIG.version}</div>
 
