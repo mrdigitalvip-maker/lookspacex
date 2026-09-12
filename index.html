@@ -52,20 +52,23 @@
         url.searchParams.set('fresh', Date.now().toString());
         location.replace(url.toString());
       }
-      window.__recoverLookSpace = recoverLookSpace;
-      document.getElementById('boot-recover').addEventListener('click', recoverLookSpace);
-      window.addEventListener('error', (event) => {
-        const message = document.getElementById('boot-message');
-        const button = document.getElementById('boot-recover');
-        if (message && !window.__LOOKSPACE_BOOTED__) message.textContent = 'A web-game module failed to start. Recovery will load a fresh build.';
-        if (button && !window.__LOOKSPACE_BOOTED__) button.style.display = 'block';
-      });
-      setTimeout(() => {
+      function showBootRecovery(messageText) {
         if (window.__LOOKSPACE_BOOTED__) return;
         const message = document.getElementById('boot-message');
         const button = document.getElementById('boot-recover');
-        if (message) message.textContent = 'Startup is taking too long. Clear stale game files and reload the current build.';
+        if (message) message.textContent = messageText;
         if (button) button.style.display = 'block';
+      }
+      window.__recoverLookSpace = recoverLookSpace;
+      document.getElementById('boot-recover').addEventListener('click', recoverLookSpace);
+      window.addEventListener('error', () => {
+        showBootRecovery('A web-game module failed to start. Recovery will load a fresh build.');
+      });
+      window.addEventListener('unhandledrejection', () => {
+        showBootRecovery('A game module could not finish loading. Recovery will clear stale files and retry.');
+      });
+      setTimeout(() => {
+        showBootRecovery('Startup is taking too long. Clear stale game files and reload the current build.');
       }, 7000);
     </script>
     <script type="module" src="/src/main.tsx"></script>
