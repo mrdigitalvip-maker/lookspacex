@@ -12,6 +12,7 @@ interface ShipStore {
   setPosition: (position: [number, number, number]) => void
   setVelocity: (velocity: number) => void
   consumeFuel: (amount: number) => void
+  damageShield: (amount: number) => void
   regenShield: () => void
   setCurrentShip: (ship: Ship) => void
 }
@@ -43,6 +44,7 @@ export const useShipStore = create<ShipStore>((set) => ({
   setPosition: (position) => set({ position }),
   setVelocity: (velocity) => set({ velocity }),
   consumeFuel: (amount) => set((state) => ({ fuel: Math.max(0, state.fuel - amount) })),
+  damageShield: (amount) => set((state) => ({ shield: Math.max(0, state.shield - amount) })),
   regenShield: () => set((state) => ({ shield: Math.min(100, state.shield + 1) })),
   setCurrentShip: (currentShip) => set({ currentShip }),
 }))
