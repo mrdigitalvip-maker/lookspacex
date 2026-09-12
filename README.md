@@ -1,108 +1,89 @@
 # LookSpace
 
-Um jogo de exploração espacial futurista desenvolvido com Next.js 14+, TypeScript, Tailwind CSS e Supabase.
+LookSpace is a browser-native cinematic space exploration game built with React, TypeScript, Three.js and React Three Fiber.
 
-## Stack Tecnológico
+The current milestone is **v0.6 — Flight Foundation**: the repository is being consolidated around a real-time Vite game runtime, without Unreal Engine.
 
-- **Framework**: Next.js 14+ (App Router)
-- **Linguagem**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL)
-- **Deploy**: Vercel
+## Current stack
 
-## Estrutura de Pastas
+- React 18
+- TypeScript
+- Vite
+- Three.js
+- React Three Fiber
+- React Three Drei
+- Zustand
+- Framer Motion
+- Supabase client layer
+- Howler audio layer
+- GitHub Actions CI
 
-```
-src/
-├── app/              # Rotas e layouts do Next.js (App Router)
-├── components/       # Componentes reutilizáveis
-├── modules/          # Módulos de funcionalidades (auth, game, etc)
-├── lib/              # Utilitários e clientes (Supabase)
-├── services/         # Serviços de API e dados
-├── hooks/            # Custom hooks do React
-├── stores/           # Gerenciamento de estado global
-├── types/            # Tipos TypeScript
-├── utils/            # Funções utilitárias
-├── config/           # Constantes de configuração
-├── styles/           # Estilos globais e variáveis CSS
-├── assets/           # Imagens, ícones, fontes, áudio
-└── i18n/             # Internacionalização
-```
+## Playable flight slice
 
-## Configuração Inicial
+The current branch introduces the first real playable space loop:
 
-### Pré-requisitos
+- cinematic splash and pilot entry flow
+- procedural Aurora Scout player ship
+- third-person chase camera
+- forward/reverse thrust
+- yaw, pitch and roll controls
+- boost mode
+- live ship telemetry in the HUD
+- animated eight-planet solar system
+- Saturn rings and orbital guides
+- 50,000-star field
+- ACES filmic tone mapping
+- production build validation
 
-- Node.js 18+
-- npm ou yarn
+### Controls
 
-### Instalação
+| Input | Action |
+| --- | --- |
+| `W` or `Space` | Thrust |
+| `S` | Reverse / brake |
+| `A` / `D` | Yaw |
+| `Arrow Up` / `Arrow Down` | Pitch |
+| `Q` / `E` | Roll |
+| `Shift` | Boost |
 
-1. Clone o repositório:
-```bash
-git clone https://github.com/mrdigitalvip-maker/lookspacex.git
-cd lookspacex
-```
-
-2. Instale as dependências:
-```bash
-npm install
-```
-
-3. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env.local
-```
-
-Preencha as variáveis com suas credenciais do Supabase:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
-### Desenvolvimento
+## Development
 
 ```bash
+npm ci
 npm run dev
 ```
 
-A aplicação estará disponível em `http://localhost:3000`
-
-### Build para Produção
+Production validation:
 
 ```bash
+npm run type-check
 npm run build
-npm start
 ```
 
-## Variáveis de Ambiente
+## Active architecture
 
-| Variável | Descrição | Obrigatória |
-|----------|-----------|------------|
-| `NEXT_PUBLIC_APP_URL` | URL da aplicação | Sim |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase | Sim |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase | Sim |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase | Sim |
+```text
+src/
+├── App.tsx
+├── main.tsx
+├── config/
+├── game/
+│   ├── ship/
+│   │   └── PilotShip.tsx
+│   └── world/
+│       ├── SolarSystem.tsx
+│       ├── SpaceScene.tsx
+│       └── StarField.tsx
+├── stores/
+├── ui/
+│   └── HUD/
+└── styles/
+```
 
-## Módulos
+Some older Next.js-era files are still present in the repository as legacy material, but they are not part of the active Vite application graph. They will be migrated or removed deliberately as the game systems replace them.
 
-Veja [docs/MODULES.md](docs/MODULES.md) para uma descrição completa de cada módulo.
+## Direction
 
-## Convenções
+The goal is a high-end space experience built directly on the web-native Three.js ecosystem: responsive flight, convincing scale, strong visual identity, cockpit and ship interiors, exploration, missions, progression, audio, save systems and increasingly realistic celestial environments.
 
-Veja [docs/CONVENTIONS.md](docs/CONVENTIONS.md) para as convenções de código do projeto.
-
-## Arquitetura
-
-Veja [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para detalhes sobre a arquitetura do projeto.
-
-## Roadmap
-
-Veja [docs/ROADMAP.md](docs/ROADMAP.md) para o plano de desenvolvimento.
-
-## Contribuindo
-
-(Guia de contribuição será adicionado aqui)
-
-## Licença
-
-MIT
+The priority is always a stable playable foundation before expanding the universe.
