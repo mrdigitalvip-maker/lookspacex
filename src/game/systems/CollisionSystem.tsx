@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { ASTEROIDS } from '@/game/world/asteroidField.data'
+import { useGameStore } from '@/stores/gameStore'
 import { useShipStore } from '@/stores/shipStore'
 import { useUIStore } from '@/stores/uiStore'
 
@@ -15,11 +16,14 @@ export function CollisionSystem() {
   const shipPosition = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state, delta) => {
+    const game = useGameStore.getState()
+    const ship = useShipStore.getState()
+    if (game.isPaused || game.currentScene !== 'SPACE' || ship.isWarping) return
+
     accumulatorRef.current += delta
     if (accumulatorRef.current < CHECK_INTERVAL) return
     accumulatorRef.current = 0
 
-    const ship = useShipStore.getState()
     shipPosition.set(...ship.position)
 
     for (const asteroid of ASTEROIDS) {

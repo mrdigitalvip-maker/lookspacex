@@ -1,12 +1,13 @@
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
+import { GAME_CONFIG } from '@/config/game.config'
 import { PilotShip } from '@/game/ship/PilotShip'
 import { CollisionSystem } from '@/game/systems/CollisionSystem'
 import { AsteroidField } from '@/game/world/AsteroidField'
 import { MissionBeacon } from '@/game/world/MissionBeacon'
 import { SolarSystem } from '@/game/world/SolarSystem'
 import { StarField } from '@/game/world/StarField'
-import { GAME_CONFIG } from '@/config/game.config'
+import { WarpTunnel } from '@/game/world/WarpTunnel'
 
 export function SpaceScene() {
   return (
@@ -32,6 +33,7 @@ export function SpaceScene() {
       <AsteroidField />
       <MissionBeacon />
       <CollisionSystem />
+      <WarpTunnel />
       <PilotShip />
     </Canvas>
   )

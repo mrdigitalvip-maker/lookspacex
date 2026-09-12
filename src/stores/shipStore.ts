@@ -12,8 +12,10 @@ interface ShipStore {
   setPosition: (position: [number, number, number]) => void
   setVelocity: (velocity: number) => void
   consumeFuel: (amount: number) => void
+  consumeEnergy: (amount: number) => void
   damageShield: (amount: number) => void
   regenShield: () => void
+  setWarping: (isWarping: boolean) => void
   setCurrentShip: (ship: Ship) => void
 }
 
@@ -44,7 +46,9 @@ export const useShipStore = create<ShipStore>((set) => ({
   setPosition: (position) => set({ position }),
   setVelocity: (velocity) => set({ velocity }),
   consumeFuel: (amount) => set((state) => ({ fuel: Math.max(0, state.fuel - amount) })),
+  consumeEnergy: (amount) => set((state) => ({ energy: Math.max(0, state.energy - amount) })),
   damageShield: (amount) => set((state) => ({ shield: Math.max(0, state.shield - amount) })),
   regenShield: () => set((state) => ({ shield: Math.min(100, state.shield + 1) })),
+  setWarping: (isWarping) => set({ isWarping }),
   setCurrentShip: (currentShip) => set({ currentShip }),
 }))
