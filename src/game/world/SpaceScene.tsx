@@ -1,0 +1,32 @@
+import { Canvas } from '@react-three/fiber'
+import * as THREE from 'three'
+import { PilotShip } from '@/game/ship/PilotShip'
+import { SolarSystem } from '@/game/world/SolarSystem'
+import { StarField } from '@/game/world/StarField'
+import { GAME_CONFIG } from '@/config/game.config'
+
+export function SpaceScene() {
+  return (
+    <Canvas
+      dpr={[1, 1.75]}
+      camera={{
+        position: [0, GAME_CONFIG.camera.thirdPersonHeight, GAME_CONFIG.camera.thirdPersonDistance + 25],
+        fov: GAME_CONFIG.camera.fov,
+        near: GAME_CONFIG.camera.near,
+        far: GAME_CONFIG.camera.far,
+      }}
+      gl={{ antialias: true, powerPreference: 'high-performance' }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = THREE.ACESFilmicToneMapping
+        gl.toneMappingExposure = 1.15
+      }}
+    >
+      <color attach="background" args={['#01030a']} />
+      <fog attach="fog" args={['#02050d', 220, 2200]} />
+      <ambientLight intensity={0.08} />
+      <StarField />
+      <SolarSystem />
+      <PilotShip />
+    </Canvas>
+  )
+}

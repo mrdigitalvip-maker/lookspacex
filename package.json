@@ -1,7 +1,7 @@
 {
   "name": "lookspacex",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,6 @@
   "dependencies": {
     "@react-three/drei": "^9.120.4",
     "@react-three/fiber": "^8.17.10",
-    "@react-three/postprocessing": "^3.0.4",
     "@supabase/supabase-js": "^2.45.0",
     "framer-motion": "^11.11.11",
     "howler": "^2.1.0",
