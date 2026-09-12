@@ -3,6 +3,7 @@ import { ASTEROIDS } from '@/game/world/asteroidField.data'
 import { useMissionStore } from '@/stores/missionStore'
 import { usePlayerStore } from '@/stores/playerStore'
 import { useShipStore } from '@/stores/shipStore'
+import { useStarBaseStore } from '@/stores/starbaseStore'
 import { useUIStore } from '@/stores/uiStore'
 
 const RADAR_RANGE = 210
@@ -33,6 +34,7 @@ export function SpaceHUD() {
   const energy = useShipStore((state) => state.energy)
   const isWarping = useShipStore((state) => state.isWarping)
   const viewMode = useShipStore((state) => state.viewMode)
+  const dockingState = useStarBaseStore((state) => state.dockingState)
   const notifications = useUIStore((state) => state.notifications)
   const missionId = useMissionStore((state) => state.id)
   const missionTitle = useMissionStore((state) => state.title)
@@ -66,6 +68,9 @@ export function SpaceHUD() {
     return { x: dx * scale, z: dz * scale }
   }, [position, target])
 
+  const warpMission = missionId === 'M002' || missionId === 'M003'
+  const dockingLabel = dockingState === 'docked' ? 'DOCKED' : dockingState === 'docking' ? 'AUTODOCK' : dockingState === 'approach' ? 'APPROACH' : null
+
   return (
     <div className={`space-hud ${shield <= 20 ? 'shield-critical' : ''} ${isWarping ? 'hud-warping' : ''}`}>
       <div className="hud-top-left hud-panel">
@@ -80,7 +85,7 @@ export function SpaceHUD() {
       </div>
 
       <div className="hud-top-center">
-        <span>{isWarping ? 'WARP VECTOR' : viewLabel}</span>
+        <span>{isWarping ? 'WARP VECTOR' : dockingLabel ?? viewLabel}</span>
         <strong>
           X {position[0].toFixed(0)} · Y {position[1].toFixed(0)} · Z {position[2].toFixed(0)}
         </strong>
@@ -89,7 +94,7 @@ export function SpaceHUD() {
       <div className="hud-top-right hud-panel">
         <p className="hud-kicker">SHIP STATUS</p>
         <strong className="ship-name">{ship?.name ?? 'Aurora Scout'}</strong>
-        <span className="ship-class">SHIELD {shieldStatus} // {isWarping ? 'WARP ACTIVE' : viewMode.toUpperCase()}</span>
+        <span className="ship-class">SHIELD {shieldStatus} // {isWarping ? 'WARP ACTIVE' : dockingLabel ?? viewMode.toUpperCase()}</span>
       </div>
 
       <div className={`mission-panel ${missionStatus === 'completed' ? 'mission-complete' : ''}`}>
@@ -116,7 +121,7 @@ export function SpaceHUD() {
           <span>{targetLocked ? `LOCK // ${targetName}` : `TRACK // ${targetName}`}</span>
           <strong>
             {targetLocked
-              ? `${distance.toFixed(0)} u · ${missionId === 'M002' ? 'R TO WARP' : 'LOCKED'}`
+              ? `${distance.toFixed(0)} u · ${warpMission ? 'R TO WARP' : 'LOCKED'}`
               : `${distance.toFixed(0)} u · PRESS T`}
           </strong>
         </div>
@@ -173,6 +178,8 @@ export function SpaceHUD() {
           <span><kbd>C</kbd> COCKPIT / CABIN / CHASE</span>
           <span><kbd>T</kbd> TARGET</span>
           <span><kbd>R</kbd> WARP</span>
+          <span><kbd>G</kbd> DOCK</span>
+          <span><kbd>H</kbd> SERVICES</span>
           <span><kbd>SHIFT</kbd> BOOST</span>
         </div>
       </div>
