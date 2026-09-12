@@ -1,6 +1,8 @@
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PilotShip } from '@/game/ship/PilotShip'
+import { AsteroidField } from '@/game/world/AsteroidField'
+import { MissionBeacon } from '@/game/world/MissionBeacon'
 import { SolarSystem } from '@/game/world/SolarSystem'
 import { StarField } from '@/game/world/StarField'
 import { GAME_CONFIG } from '@/config/game.config'
@@ -26,6 +28,8 @@ export function SpaceScene() {
       <ambientLight intensity={0.08} />
       <StarField />
       <SolarSystem />
+      <AsteroidField />
+      <MissionBeacon />
       <PilotShip />
     </Canvas>
   )
