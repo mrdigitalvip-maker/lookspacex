@@ -48,3 +48,7 @@ jobs:
           test -n "$(find dist/assets -maxdepth 1 -type f -name '*.css' -print -quit)"
           grep -q '/assets/' dist/index.html
           node -e "JSON.parse(require('fs').readFileSync('dist/manifest.webmanifest','utf8')); console.log('manifest ok')"
+
+      - name: Browser runtime smoke check
+        shell: bash
+        run: bash scripts/runtime-smoke.sh

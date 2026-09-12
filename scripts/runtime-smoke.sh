@@ -20,7 +20,7 @@ fi
 
 DOM="$($CHROME_BIN --headless=new --no-sandbox --disable-gpu --virtual-time-budget=6500 --dump-dom http://127.0.0.1:4173/ 2>/tmp/lookspace-chrome.log)"
 
-if ! grep -q "Board ship & launch" <<< "$DOM"; then
+if ! grep -q "PILOT ACCESS // HELIOS STARBASE" <<< "$DOM" || ! grep -q "Board ship" <<< "$DOM"; then
   echo "LookSpace runtime smoke test failed: entry screen was not rendered."
   echo "--- preview log ---"
   cat /tmp/lookspace-preview.log || true
