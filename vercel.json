@@ -4,6 +4,11 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "git": {
+    "deploymentEnabled": {
+      "codex/**": false
+    }
+  },
   "headers": [
     {
       "source": "/sw.js",
