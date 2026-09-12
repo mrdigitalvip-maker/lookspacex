@@ -17,5 +17,15 @@ export default defineConfig({
   build: {
     target: 'esnext',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          three: ['three'],
+          'react-three': ['@react-three/fiber', '@react-three/drei'],
+          services: ['@supabase/supabase-js', 'framer-motion', 'howler', 'leva', 'zustand'],
+        },
+      },
+    },
   },
 })
