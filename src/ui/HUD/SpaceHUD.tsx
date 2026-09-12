@@ -2,9 +2,26 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { useShipStore } from '@/stores/shipStore'
 import { useUIStore } from '@/stores/uiStore'
 
+function MetricBar({ label, value }: { label: string; value: number }) {
+  const clamped = Math.max(0, Math.min(100, value))
+
+  return (
+    <div className="metric-row">
+      <div className="metric-label">
+        <span>{label}</span>
+        <strong>{clamped.toFixed(0)}%</strong>
+      </div>
+      <div className="metric-track">
+        <div className="metric-fill" style={{ width: `${clamped}%` }} />
+      </div>
+    </div>
+  )
+}
+
 export function SpaceHUD() {
   const stats = usePlayerStore((state) => state.stats)
   const ship = useShipStore((state) => state.currentShip)
+  const position = useShipStore((state) => state.position)
   const velocity = useShipStore((state) => state.velocity)
   const fuel = useShipStore((state) => state.fuel)
   const shield = useShipStore((state) => state.shield)
@@ -12,51 +29,76 @@ export function SpaceHUD() {
   const notifications = useUIStore((state) => state.notifications)
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute left-4 top-4 rounded-[1.5rem] border border-cyan-400/20 bg-slate-950/70 px-4 py-3 backdrop-blur-xl">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Piloto</p>
-        <div className="mt-2 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-400/20 text-cyan-200">L</div>
+    <div className="space-hud">
+      <div className="hud-top-left hud-panel">
+        <p className="hud-kicker">AURORA FLIGHT COMPUTER</p>
+        <div className="pilot-line">
+          <div className="pilot-avatar">L</div>
           <div>
-            <p className="text-sm font-semibold text-white">{stats?.level ?? 1}</p>
-            <p className="text-xs text-slate-400">Nível {stats?.level ?? 1}</p>
+            <strong>PILOT // GUEST</strong>
+            <span>Level {stats?.level ?? 1} · {stats?.credits ?? 1000} CR</span>
           </div>
         </div>
-        <div className="mt-3 h-2 w-40 overflow-hidden rounded-full bg-slate-800">
-          <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-500" style={{ width: `${Math.min(100, ((stats?.xp ?? 0) % 1000) / 10)}%` }} />
+      </div>
+
+      <div className="hud-top-center">
+        <span>LOCAL FRAME</span>
+        <strong>
+          X {position[0].toFixed(0)} · Y {position[1].toFixed(0)} · Z {position[2].toFixed(0)}
+        </strong>
+      </div>
+
+      <div className="hud-top-right hud-panel">
+        <p className="hud-kicker">SHIP STATUS</p>
+        <strong className="ship-name">{ship?.name ?? 'Aurora Scout'}</strong>
+        <span className="ship-class">EXPLORER CLASS // LINK STABLE</span>
+      </div>
+
+      <div className="flight-reticle" aria-hidden="true">
+        <span className="reticle-horizontal" />
+        <span className="reticle-vertical" />
+        <i />
+      </div>
+
+      <div className="hud-bottom-left hud-panel radar-panel">
+        <div className="radar-header">
+          <span>PROXIMITY RADAR</span>
+          <i />
+        </div>
+        <div className="radar-scope" aria-hidden="true">
+          <span className="radar-ring radar-ring-a" />
+          <span className="radar-ring radar-ring-b" />
+          <span className="radar-sweep" />
+          <b className="radar-contact contact-a" />
+          <b className="radar-contact contact-b" />
+          <b className="radar-contact contact-c" />
         </div>
       </div>
 
-      <div className="absolute right-4 top-4 rounded-[1.5rem] border border-cyan-400/20 bg-slate-950/70 px-4 py-3 backdrop-blur-xl">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Créditos</p>
-        <p className="mt-2 text-lg font-semibold text-white">{stats?.credits ?? 1000}</p>
-        <div className="mt-2 space-y-1 text-xs text-slate-300">
-          {notifications.slice(0, 2).map((item) => (
-            <div key={item.id} className="rounded-full border border-cyan-400/10 bg-slate-900/70 px-2 py-1">
-              {item.message}
-            </div>
-          ))}
+      <div className="hud-bottom-center">
+        <div className="velocity-readout">
+          <span>VELOCITY</span>
+          <strong>{velocity.toFixed(0)}</strong>
+          <em>u/s</em>
+        </div>
+        <div className="control-strip">
+          <span><kbd>W</kbd><kbd>S</kbd> THRUST</span>
+          <span><kbd>A</kbd><kbd>D</kbd> YAW</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> PITCH</span>
+          <span><kbd>Q</kbd><kbd>E</kbd> ROLL</span>
+          <span><kbd>SHIFT</kbd> BOOST</span>
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-4 rounded-[1.5rem] border border-cyan-400/20 bg-slate-950/70 p-4 backdrop-blur-xl">
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-cyan-300" />
-          <span className="text-xs uppercase tracking-[0.35em] text-cyan-300">Radar</span>
-        </div>
-        <div className="mt-3 flex h-24 w-24 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-900/80">
-          <div className="h-16 w-16 rounded-full border border-cyan-400/10" />
-        </div>
-      </div>
-
-      <div className="absolute bottom-4 right-4 rounded-[1.5rem] border border-cyan-400/20 bg-slate-950/70 p-4 backdrop-blur-xl">
-        <div className="space-y-2 text-xs uppercase tracking-[0.2em] text-slate-400">
-          <div>Velocidade {velocity.toFixed(0)} u/s</div>
-          <div>Combustível {fuel.toFixed(0)}%</div>
-          <div>Escudo {shield.toFixed(0)}%</div>
-          <div>Energia {energy.toFixed(0)}%</div>
-        </div>
-        <div className="mt-3 text-sm text-cyan-200">Nave: {ship?.name ?? 'Aurora Scout'}</div>
+      <div className="hud-bottom-right hud-panel systems-panel">
+        <MetricBar label="FUEL" value={fuel} />
+        <MetricBar label="SHIELD" value={shield} />
+        <MetricBar label="ENERGY" value={energy} />
+        {notifications.length > 0 ? (
+          <div className="hud-notification">{notifications[0]?.message}</div>
+        ) : (
+          <div className="hud-notification">Navigation systems nominal</div>
+        )}
       </div>
     </div>
   )
