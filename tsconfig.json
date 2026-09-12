@@ -37,6 +37,6 @@
       "@styles/*": ["./src/styles/*"]
     }
   },
-  "include": ["src", "vite.config.ts"],
+  "files": ["src/main.tsx"],
   "exclude": ["node_modules", "dist"]
 }
