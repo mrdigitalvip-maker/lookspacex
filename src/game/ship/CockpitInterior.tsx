@@ -1,9 +1,11 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import * as THREE from 'three'
+import { useGameStore } from '@/stores/gameStore'
 import { useShipStore } from '@/stores/shipStore'
 
 export function CockpitInterior() {
+  const scene = useGameStore((state) => state.currentScene)
   const viewMode = useShipStore((state) => state.viewMode)
   const velocity = useShipStore((state) => state.velocity)
   const energy = useShipStore((state) => state.energy)
@@ -22,7 +24,7 @@ export function CockpitInterior() {
     if (cabinPulseRef.current) cabinPulseRef.current.intensity = 0.65 + Math.sin(state.clock.elapsedTime * 1.7) * 0.12
   })
 
-  if (viewMode === 'chase') return null
+  if (viewMode === 'chase' && scene !== 'LOADING') return null
 
   return (
     <group>
