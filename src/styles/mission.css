@@ -115,9 +115,100 @@
   animation: shield-critical-pulse 1.1s ease-in-out infinite;
 }
 
+.radar-live-contact,
+.radar-mission-contact,
+.radar-player-contact {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.radar-live-contact {
+  background: rgba(188, 208, 222, 0.78);
+  box-shadow: 0 0 7px rgba(173, 216, 230, 0.42);
+}
+
+.radar-contact-large {
+  width: 6px;
+  height: 6px;
+  background: #ffbb82;
+  box-shadow: 0 0 9px rgba(255, 177, 111, 0.55);
+}
+
+.radar-mission-contact {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #6ee7ff;
+  background: rgba(34, 211, 238, 0.18);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.7);
+  animation: radar-mission-pulse 1.2s ease-in-out infinite;
+}
+
+.radar-mission-locked {
+  border-color: #ff9b72;
+  background: rgba(255, 126, 77, 0.25);
+  box-shadow: 0 0 12px rgba(255, 126, 77, 0.78);
+}
+
+.radar-player-contact {
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: #f7fbff;
+  box-shadow: 0 0 12px #6ee7ff;
+}
+
+.warp-status {
+  position: absolute;
+  left: 50%;
+  bottom: 156px;
+  display: grid;
+  gap: 3px;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #b9f8ff;
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.72);
+  animation: warp-status-pulse 0.7s ease-in-out infinite alternate;
+}
+
+.warp-status span {
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.32em;
+}
+
+.warp-status strong {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+}
+
+.hud-warping .flight-reticle {
+  transform: translate(-50%, -50%) scale(0.82);
+  border-color: rgba(110, 231, 255, 0.5);
+  box-shadow: 0 0 48px rgba(34, 211, 238, 0.2);
+}
+
+.hud-warping .hud-panel {
+  border-color: rgba(110, 231, 255, 0.3);
+}
+
 @keyframes shield-critical-pulse {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
+}
+
+@keyframes radar-mission-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.65; }
+  50% { transform: translate(-50%, -50%) scale(1.35); opacity: 1; }
+}
+
+@keyframes warp-status-pulse {
+  from { opacity: 0.68; transform: translateX(-50%) scale(0.98); }
+  to { opacity: 1; transform: translateX(-50%) scale(1.03); }
 }
 
 @media (max-width: 760px) {
@@ -128,5 +219,9 @@
 
   .target-lock {
     top: calc(50% - 68px);
+  }
+
+  .warp-status {
+    bottom: 132px;
   }
 }
