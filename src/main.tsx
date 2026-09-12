@@ -5,6 +5,7 @@ import { registerLookSpaceServiceWorker } from './pwa/register'
 import './styles/index.css'
 import './styles/mission.css'
 import './styles/cinematic.css'
+import './styles/pwa.css'
 
 registerLookSpaceServiceWorker()
 
