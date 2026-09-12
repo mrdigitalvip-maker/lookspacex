@@ -1,0 +1,41 @@
+{
+  "name": "LookSpace",
+  "short_name": "LookSpace",
+  "description": "Cinematic deep-space exploration and flight game.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#02050b",
+  "theme_color": "#02050b",
+  "prefer_related_applications": false,
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/lookspace-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/lookspace-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/lookspace-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/lookspace-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
