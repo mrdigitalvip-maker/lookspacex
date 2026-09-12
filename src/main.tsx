@@ -7,6 +7,7 @@ import './styles/index.css'
 import './styles/mission.css'
 import './styles/cinematic.css'
 import './styles/pwa.css'
+import './styles/starbase.css'
 
 registerLookSpaceServiceWorker()
 
