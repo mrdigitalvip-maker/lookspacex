@@ -6,6 +6,7 @@ import { CollisionSystem } from '@/game/systems/CollisionSystem'
 import { AsteroidField } from '@/game/world/AsteroidField'
 import { MissionBeacon } from '@/game/world/MissionBeacon'
 import { SolarSystem } from '@/game/world/SolarSystem'
+import { StarBaseHangar } from '@/game/world/StarBaseHangar'
 import { StarField } from '@/game/world/StarField'
 import { WarpTunnel } from '@/game/world/WarpTunnel'
 
@@ -30,6 +31,7 @@ export function SpaceScene() {
       <ambientLight intensity={0.08} />
       <StarField />
       <SolarSystem />
+      <StarBaseHangar />
       <AsteroidField />
       <MissionBeacon />
       <CollisionSystem />
