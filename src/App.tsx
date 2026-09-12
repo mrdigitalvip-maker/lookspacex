@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { GAME_CONFIG } from '@/config/game.config'
 import { flightAudio } from '@/game/audio/FlightAudio'
+import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useGameStore } from '@/stores/gameStore'
 import { useMissionStore } from '@/stores/missionStore'
 import { CinematicOverlay, type CinematicMode } from '@/ui/Cinematic/CinematicOverlay'
@@ -22,7 +23,9 @@ function App() {
   const missionTitle = useMissionStore((state) => state.title)
   const missionStatus = useMissionStore((state) => state.status)
   const advanceMission = useMissionStore((state) => state.advanceMission)
+  const { canInstall, installed, isIOS, install } = useInstallPrompt()
   const [cinematicMode, setCinematicMode] = useState<CinematicMode>(null)
+  const [installHint, setInstallHint] = useState<string | null>(null)
   const launchTimerRef = useRef<number | null>(null)
   const missionTimerRef = useRef<number | null>(null)
   const lastCompletedMissionRef = useRef<string | null>(null)
@@ -76,11 +79,27 @@ function App() {
     }, 4800)
   }
 
+  const handleInstall = async () => {
+    setInstallHint(null)
+    if (canInstall) {
+      const outcome = await install()
+      if (outcome === 'dismissed') setInstallHint('Installation cancelled. You can install later from this screen.')
+      return
+    }
+
+    if (isIOS) {
+      setInstallHint('On iPhone/iPad: Share → Add to Home Screen → Add.')
+      return
+    }
+
+    setInstallHint('Use your browser menu and choose “Install LookSpace” or “Install app”.')
+  }
+
   return (
     <main className="lookspace-shell">
       {shouldMountFlight ? (
         <div className="space-canvas" aria-hidden="true">
-          <Suspense fallback={<div className="space-preload" /> }>
+          <Suspense fallback={<div className="space-preload" />}>
             <SpaceScene />
           </Suspense>
         </div>
@@ -88,7 +107,7 @@ function App() {
 
       {scene === 'SPACE' && cinematicMode !== 'mission-complete' ? <SpaceHUD /> : null}
 
-      <div className="build-chip">CINEMATIC FLIGHT // {GAME_CONFIG.version}</div>
+      <div className="build-chip">COCKPIT ERA // {GAME_CONFIG.version}</div>
 
       {scene === 'SPLASH' ? (
         <motion.section
@@ -114,7 +133,7 @@ function App() {
                 transition={{ duration: 1.8, ease: 'easeInOut' }}
               />
             </div>
-            <p className="splash-status">Waking stellar navigation core</p>
+            <p className="splash-status">Waking Aurora cockpit systems</p>
           </motion.div>
         </motion.section>
       ) : null}
@@ -135,20 +154,31 @@ function App() {
             <p className="eyebrow">PILOT ACCESS // HELIOS NETWORK</p>
             <h2>Enter the living universe.</h2>
             <p className="entry-copy">
-              Launch the Aurora Scout into a cinematic deep-space campaign. Every flight, mission and discovery expands the universe ahead.
+              Launch the Aurora Scout from a cinematic exterior sequence and take control from inside the cockpit. Switch views at any time while the campaign expands around you.
             </p>
             <button className="primary-action" type="button" onClick={beginGuestSession}>
-              <span>Begin cinematic launch</span>
+              <span>Begin cockpit launch</span>
               <strong>→</strong>
             </button>
-            <button className="secondary-action" type="button" disabled>
-              Online pilot profile // under construction
-            </button>
+
+            {!installed ? (
+              <button className="secondary-action" type="button" onClick={handleInstall}>
+                {canInstall ? 'Install LookSpace' : isIOS ? 'Install on this device' : 'Install Game'}
+              </button>
+            ) : (
+              <button className="secondary-action" type="button" disabled>
+                LookSpace installed // standalone ready
+              </button>
+            )}
+
+            {installHint ? <p className="install-hint">{installHint}</p> : null}
+
             <div className="entry-meta">
               <span>W/S thrust</span>
               <span>A/D yaw</span>
               <span>Arrows pitch</span>
               <span>Q/E roll</span>
+              <span>C camera</span>
               <span>T target</span>
               <span>R warp</span>
               <span>Shift boost</span>
@@ -159,7 +189,7 @@ function App() {
 
       {scene === 'LOADING' && isLoading ? (
         <div className="launch-status" aria-hidden="true">
-          <span>FLIGHT AUTHORITY TRANSFER</span>
+          <span>EXTERIOR CAMERA → COCKPIT HANDOFF</span>
           <i />
         </div>
       ) : null}
