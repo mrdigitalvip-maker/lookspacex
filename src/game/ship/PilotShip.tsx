@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { GAME_CONFIG } from '@/config/game.config'
 import { flightAudio } from '@/game/audio/FlightAudio'
+import { CockpitInterior } from '@/game/ship/CockpitInterior'
 import { useGameStore } from '@/stores/gameStore'
 import { useMissionStore } from '@/stores/missionStore'
 import { useShipStore } from '@/stores/shipStore'
@@ -33,6 +34,7 @@ export function PilotShip() {
   const setVelocity = useShipStore((state) => state.setVelocity)
   const consumeFuel = useShipStore((state) => state.consumeFuel)
   const fuel = useShipStore((state) => state.fuel)
+  const viewMode = useShipStore((state) => state.viewMode)
 
   const forward = useMemo(() => new THREE.Vector3(), [])
   const brakeDirection = useMemo(() => new THREE.Vector3(), [])
@@ -42,10 +44,13 @@ export function PilotShip() {
   const targetPosition = useMemo(() => new THREE.Vector3(), [])
   const warpDirection = useMemo(() => new THREE.Vector3(0, 0, -1), [])
   const warpVelocity = useMemo(() => new THREE.Vector3(), [])
+  const cockpitWorld = useMemo(() => new THREE.Vector3(), [])
+  const cockpitLook = useMemo(() => new THREE.Vector3(), [])
   const cameraOffset = useMemo(
     () => new THREE.Vector3(0, GAME_CONFIG.camera.thirdPersonHeight, GAME_CONFIG.camera.thirdPersonDistance),
     [],
   )
+  const cockpitOffset = useMemo(() => new THREE.Vector3(0, 0.72, -0.16), [])
 
   useEffect(() => {
     const setKey = (event: KeyboardEvent, pressed: boolean) => {
@@ -111,11 +116,20 @@ export function PilotShip() {
       useUIStore.getState().addNotification('WARP DRIVE // ENGAGED', 'success')
     }
 
+    const toggleCamera = () => {
+      if (useGameStore.getState().isPaused) return
+      const shipState = useShipStore.getState()
+      shipState.toggleViewMode()
+      const next = shipState.viewMode === 'cockpit' ? 'CHASE CAMERA' : 'COCKPIT'
+      useUIStore.getState().addNotification(`VIEW MODE // ${next}`, 'info')
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       setKey(event, true)
       if (event.repeat) return
       if (event.code === 'KeyT') attemptTargetLock()
       if (event.code === 'KeyR') attemptWarp()
+      if (event.code === 'KeyC') toggleCamera()
     }
     const handleKeyUp = (event: KeyboardEvent) => setKey(event, false)
     const handleBlur = () => {
@@ -142,6 +156,10 @@ export function PilotShip() {
     const mission = useMissionStore.getState()
     const warping = shipState.isWarping
 
+    forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize()
+    cockpitWorld.copy(cockpitOffset).applyQuaternion(ship.quaternion).add(ship.position)
+    cockpitLook.copy(ship.position).addScaledVector(forward, 28).add(new THREE.Vector3(0, 0.65, 0))
+
     if (gameState.currentScene === 'LOADING') {
       if (launchStartRef.current === null) launchStartRef.current = state.clock.elapsedTime
       const elapsed = state.clock.elapsedTime - launchStartRef.current
@@ -152,13 +170,18 @@ export function PilotShip() {
       const height = THREE.MathUtils.lerp(9, GAME_CONFIG.camera.thirdPersonHeight, eased)
 
       desiredCameraPosition.set(Math.sin(angle) * radius, height, Math.cos(angle) * radius).add(ship.position)
-      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-3.8 * delta))
-      desiredLookAt.copy(ship.position).add(new THREE.Vector3(0, 0.25, -0.5))
+      if (t > 0.68) {
+        const cockpitBlend = THREE.MathUtils.smoothstep(t, 0.68, 1)
+        desiredCameraPosition.lerp(cockpitWorld, cockpitBlend)
+      }
+      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-4.2 * delta))
+      desiredLookAt.copy(ship.position).addScaledVector(forward, t > 0.68 ? 28 : 0.5).add(new THREE.Vector3(0, 0.25, 0))
       camera.lookAt(desiredLookAt)
-      ship.rotation.y = Math.sin(elapsed * 0.38) * 0.06
+      ship.rotation.y = Math.sin(elapsed * 0.38) * 0.06 * (1 - t)
 
       if (camera instanceof THREE.PerspectiveCamera) {
-        camera.fov = THREE.MathUtils.lerp(camera.fov, THREE.MathUtils.lerp(58, GAME_CONFIG.camera.fov, eased), 1 - Math.exp(-4 * delta))
+        const launchFov = t > 0.68 ? THREE.MathUtils.lerp(64, 70, (t - 0.68) / 0.32) : THREE.MathUtils.lerp(58, 68, eased)
+        camera.fov = THREE.MathUtils.lerp(camera.fov, launchFov, 1 - Math.exp(-4 * delta))
         camera.updateProjectionMatrix()
       }
 
@@ -234,16 +257,24 @@ export function PilotShip() {
 
     ship.position.addScaledVector(velocity, delta)
 
-    desiredCameraPosition.copy(cameraOffset).applyQuaternion(ship.quaternion).add(ship.position)
-    const cameraBlend = 1 - Math.exp(-(warping ? 3.2 : CAMERA_DAMPING) * delta)
+    const cockpit = shipState.viewMode === 'cockpit'
+    if (cockpit) {
+      desiredCameraPosition.copy(cockpitOffset).applyQuaternion(ship.quaternion).add(ship.position)
+      desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 90 : 34).add(new THREE.Vector3(0, 0.55, 0))
+    } else {
+      desiredCameraPosition.copy(cameraOffset).applyQuaternion(ship.quaternion).add(ship.position)
+      desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 70 : 22)
+    }
+
+    const cameraBlend = 1 - Math.exp(-(cockpit ? 9.5 : warping ? 3.2 : CAMERA_DAMPING) * delta)
     camera.position.lerp(desiredCameraPosition, cameraBlend)
-    desiredLookAt.copy(ship.position).addScaledVector(forward, warping ? 70 : 22)
     camera.lookAt(desiredLookAt)
 
     if (camera instanceof THREE.PerspectiveCamera) {
       const speedRatio = Math.min(1, velocity.length() / WARP_SPEED)
-      const targetFov = warping ? 108 : GAME_CONFIG.camera.fov + speedRatio * 7 + (boosting ? 5 : 0)
-      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-(warping ? 7 : 4.5) * delta))
+      const baseFov = cockpit ? 70 : GAME_CONFIG.camera.fov
+      const targetFov = warping ? (cockpit ? 96 : 108) : baseFov + speedRatio * 6 + (boosting ? 4 : 0)
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-(warping ? 7 : 5.5) * delta))
       camera.updateProjectionMatrix()
     }
 
@@ -276,51 +307,55 @@ export function PilotShip() {
 
   return (
     <group ref={shipRef} position={[0, 0, 25]} rotation={[0, 0, 0]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <coneGeometry args={[1.25, 5.2, 6]} />
-        <meshStandardMaterial color="#182238" metalness={0.88} roughness={0.22} />
-      </mesh>
+      <CockpitInterior />
 
-      <mesh position={[0, 0.55, -0.65]} scale={[0.72, 0.35, 1.15]}>
-        <sphereGeometry args={[1, 32, 20]} />
-        <meshStandardMaterial color="#6ee7ff" emissive="#0ea5e9" emissiveIntensity={1.4} metalness={0.3} roughness={0.08} transparent opacity={0.88} />
-      </mesh>
+      <group visible={viewMode === 'chase'}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <coneGeometry args={[1.25, 5.2, 6]} />
+          <meshStandardMaterial color="#182238" metalness={0.88} roughness={0.22} />
+        </mesh>
 
-      <mesh position={[-1.7, -0.12, 0.2]} rotation={[0, 0.08, 0.08]}>
-        <boxGeometry args={[2.7, 0.18, 2.2]} />
-        <meshStandardMaterial color="#0d1527" metalness={0.92} roughness={0.2} />
-      </mesh>
-      <mesh position={[1.7, -0.12, 0.2]} rotation={[0, -0.08, -0.08]}>
-        <boxGeometry args={[2.7, 0.18, 2.2]} />
-        <meshStandardMaterial color="#0d1527" metalness={0.92} roughness={0.2} />
-      </mesh>
+        <mesh position={[0, 0.55, -0.65]} scale={[0.72, 0.35, 1.15]}>
+          <sphereGeometry args={[1, 32, 20]} />
+          <meshStandardMaterial color="#6ee7ff" emissive="#0ea5e9" emissiveIntensity={1.4} metalness={0.3} roughness={0.08} transparent opacity={0.88} />
+        </mesh>
 
-      <mesh position={[-1.15, -0.18, 2.3]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.38, 0.48, 1.1, 20]} />
-        <meshStandardMaterial ref={leftThrusterRef} color="#111827" emissive="#22d3ee" emissiveIntensity={3} metalness={0.8} roughness={0.28} />
-      </mesh>
-      <mesh position={[1.15, -0.18, 2.3]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.38, 0.48, 1.1, 20]} />
-        <meshStandardMaterial ref={rightThrusterRef} color="#111827" emissive="#22d3ee" emissiveIntensity={3} metalness={0.8} roughness={0.28} />
-      </mesh>
+        <mesh position={[-1.7, -0.12, 0.2]} rotation={[0, 0.08, 0.08]}>
+          <boxGeometry args={[2.7, 0.18, 2.2]} />
+          <meshStandardMaterial color="#0d1527" metalness={0.92} roughness={0.2} />
+        </mesh>
+        <mesh position={[1.7, -0.12, 0.2]} rotation={[0, -0.08, -0.08]}>
+          <boxGeometry args={[2.7, 0.18, 2.2]} />
+          <meshStandardMaterial color="#0d1527" metalness={0.92} roughness={0.2} />
+        </mesh>
 
-      <mesh ref={leftPlumeRef} position={[-1.15, -0.18, 3.75]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
-        <coneGeometry args={[0.24, 2.8, 18, 1, true]} />
-        <meshBasicMaterial color="#7cf4ff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
-      </mesh>
-      <mesh ref={rightPlumeRef} position={[1.15, -0.18, 3.75]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
-        <coneGeometry args={[0.24, 2.8, 18, 1, true]} />
-        <meshBasicMaterial color="#7cf4ff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
-      </mesh>
+        <mesh position={[-1.15, -0.18, 2.3]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.38, 0.48, 1.1, 20]} />
+          <meshStandardMaterial ref={leftThrusterRef} color="#111827" emissive="#22d3ee" emissiveIntensity={3} metalness={0.8} roughness={0.28} />
+        </mesh>
+        <mesh position={[1.15, -0.18, 2.3]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.38, 0.48, 1.1, 20]} />
+          <meshStandardMaterial ref={rightThrusterRef} color="#111827" emissive="#22d3ee" emissiveIntensity={3} metalness={0.8} roughness={0.28} />
+        </mesh>
 
-      <mesh position={[-1.15, -0.18, 3.05]}>
-        <sphereGeometry args={[0.28, 16, 12]} />
-        <meshBasicMaterial color="#8ff7ff" toneMapped={false} />
-      </mesh>
-      <mesh position={[1.15, -0.18, 3.05]}>
-        <sphereGeometry args={[0.28, 16, 12]} />
-        <meshBasicMaterial color="#8ff7ff" toneMapped={false} />
-      </mesh>
+        <mesh ref={leftPlumeRef} position={[-1.15, -0.18, 3.75]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
+          <coneGeometry args={[0.24, 2.8, 18, 1, true]} />
+          <meshBasicMaterial color="#7cf4ff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+        </mesh>
+        <mesh ref={rightPlumeRef} position={[1.15, -0.18, 3.75]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
+          <coneGeometry args={[0.24, 2.8, 18, 1, true]} />
+          <meshBasicMaterial color="#7cf4ff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+        </mesh>
+
+        <mesh position={[-1.15, -0.18, 3.05]}>
+          <sphereGeometry args={[0.28, 16, 12]} />
+          <meshBasicMaterial color="#8ff7ff" toneMapped={false} />
+        </mesh>
+        <mesh position={[1.15, -0.18, 3.05]}>
+          <sphereGeometry args={[0.28, 16, 12]} />
+          <meshBasicMaterial color="#8ff7ff" toneMapped={false} />
+        </mesh>
+      </group>
 
       <pointLight position={[0, 0, 2.7]} color="#22d3ee" intensity={3.2} distance={14} />
     </group>
