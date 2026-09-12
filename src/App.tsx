@@ -6,8 +6,10 @@ import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useGameStore } from '@/stores/gameStore'
 import { useMissionStore } from '@/stores/missionStore'
 import { useShipStore } from '@/stores/shipStore'
+import { useStarBaseStore } from '@/stores/starbaseStore'
 import { CinematicOverlay, type CinematicMode } from '@/ui/Cinematic/CinematicOverlay'
 import { SpaceHUD } from '@/ui/HUD/SpaceHUD'
+import { StarBasePanel } from '@/ui/StarBase/StarBasePanel'
 
 const SpaceScene = lazy(() =>
   import('@/game/world/SpaceScene').then((module) => ({ default: module.SpaceScene })),
@@ -25,6 +27,7 @@ function App() {
   const missionStatus = useMissionStore((state) => state.status)
   const advanceMission = useMissionStore((state) => state.advanceMission)
   const setViewMode = useShipStore((state) => state.setViewMode)
+  const resetDeparture = useStarBaseStore((state) => state.resetDeparture)
   const { canInstall, installed, isIOS, install } = useInstallPrompt()
   const [cinematicMode, setCinematicMode] = useState<CinematicMode>(null)
   const [installHint, setInstallHint] = useState<string | null>(null)
@@ -69,6 +72,7 @@ function App() {
     if (launchTimerRef.current !== null) window.clearTimeout(launchTimerRef.current)
 
     flightAudio.start()
+    resetDeparture()
     setViewMode('chase')
     setCinematicMode('launch')
     setScene('LOADING')
@@ -110,8 +114,9 @@ function App() {
       ) : null}
 
       {scene === 'SPACE' && cinematicMode !== 'mission-complete' ? <SpaceHUD /> : null}
+      {scene === 'SPACE' ? <StarBasePanel /> : null}
 
-      <div className="build-chip">STARBASE // LIVING SHIP // {GAME_CONFIG.version}</div>
+      <div className="build-chip">STARBASE GAMEPLAY // {GAME_CONFIG.version}</div>
 
       {scene === 'SPLASH' ? (
         <motion.section
@@ -137,7 +142,7 @@ function App() {
                 transition={{ duration: 1.8, ease: 'easeInOut' }}
               />
             </div>
-            <p className="splash-status">Synchronizing Helios StarBase and Aurora interior</p>
+            <p className="splash-status">Synchronizing Helios traffic, docking and flight systems</p>
           </motion.div>
         </motion.section>
       ) : null}
@@ -158,10 +163,10 @@ function App() {
             <p className="eyebrow">PILOT ACCESS // HELIOS STARBASE</p>
             <h2>Board the Aurora.</h2>
             <p className="entry-copy">
-              Begin inside Helios StarBase, watch the hangar release your ship, launch through the departure corridor and take control from the Aurora cockpit. Cycle through cockpit, living cabin and chase views while the campaign expands.
+              Launch from a living StarBase, fly the opening campaign, return through a real docking corridor and use the Helios hangar to service or swap your flight frame.
             </p>
             <button className="primary-action" type="button" onClick={beginGuestSession}>
-              <span>Board Aurora & launch</span>
+              <span>Board ship & launch</span>
               <strong>→</strong>
             </button>
 
@@ -185,6 +190,8 @@ function App() {
               <span>C cockpit/cabin/chase</span>
               <span>T target</span>
               <span>R warp</span>
+              <span>G dock</span>
+              <span>H services</span>
               <span>Shift boost</span>
             </div>
           </motion.div>
